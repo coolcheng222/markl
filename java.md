@@ -2008,6 +2008,95 @@ class MThread implements Runnable{
 * Java没有多继承,线程和类也不是is-a关系
 * 更适合多个线程共享数据的情况
 
+#### 4.4 实现Callable接口(5.0+)
+
+功能比Runnable更强大一些
+
+* call方法可以有返回值,抛异常,而run不行
+* 支持泛型返回值
+* 需要借助FutureTask类,比如获取返回结果
+
+__Future接口__:
+
+* 可以对具体Runnable,Callable任务的执行结果进行取消,查询是否完成,获取结果等
+* ==FutherTask是Future接口的唯一实现类==
+* FutureTask还实现了Runnable接口,也可以作为Runnable被线程执行,也可以作为Future获取Callable的返回值
+
+```java
+class Number implements Callable {//实现Callable接口
+
+    @Override
+    public Object call() throws Exception {//有返回值,可以抛出异常
+        int sum = 0;
+        for (int i = 0; i < 100; i++) {
+            if( i % 2 == 0){
+                System.out.println(i);
+                sum += i;
+            }
+        }
+        return sum;
+    }
+}
+public class ThreadNew {
+    public static void main(String[] args) {
+        Number numThread = new Number(); //实例化Callable的实现call()的类
+
+        FutureTask futureTask = new FutureTask(numThread);
+        //将该类传给FutureTask构造器
+        new Thread(futureTask).start();//调用Thread的方法开始线程
+
+        try {
+            Object sum = futureTask.get();//调用FutureTask的方法获取返回值
+            System.out.println(sum);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+        }
+
+    }
+}
+
+```
+
+#### 4.5 线程池(5.0+)
+
+* 背景: 经常创建和销毁,使用量特别大的资源,比如并发性的线程,对性能影响较大
+* 思路: 提前创建好多个线程,放入线程池中,使用时直接获取,使用完放回池中.重复利用.
+* 好处: 提高响应速度,降低资源消耗,便于线程管理.
+
+* __相关API__: `ExecutorService`和`Executors`
+
+  * `ExecutororService`: 真正的线程池接口
+  * `Executors`: 工具类,线程池的工厂类.
+
+  ```java
+  //返回线程池
+  Executors.newCachedThreadPool(); //创建一个可根据需要创建新线程的线程池
+  Executors.newFixedThreadPool(n); //创建一个可重用固定线程数的线程池
+  Executors.newSingleThreadExecutor(); //创建只有一个线程的线程池
+  Executors.newScheduledThreadPool(n); //创建一个线程池.它可安排在给定延迟后运行命令或定期执行
+  ```
+
+* __实例__:
+
+  ```java
+  public class ThreadPool {
+      public static void main(String[] args) {
+          ExecutorService service = Executors.newFixedThreadPool(10);
+  
+          //接下来开始线程,一个execute开始一个线程
+          service.execute(new NumberThread());//适合于Runnable
+  //        service.submit();//适合于Callable
+  		//传入接口实现的实例
+          service.shutdown();//关闭线程池
+      }
+  }
+  //通过ExecutorService的实例可以修改属性,管理线程
+  ```
+
+  
+
 -----------------
 
 ### 4.1.1. Thread类方法
@@ -2223,3 +2312,114 @@ class Bank {//更高效率
 若店中没有商品了,店员会告诉消费者等一下.有产品了再来通知消费者取走
 
 * 解答的代码在javaidea的`day01的java2的ProductTest`中
+
+-----
+
+## 三. Java常用类
+
+### 1. 字符串系列
+
+#### 1.1 String类
+
+`String`类是一个final类,代表的内容是__不可变的字符序列__,以一对双引号为标志
+其值存在属性value(final的byte数组,永不为null)中.
+
+```java
+public final class String
+    implements java.io.Serializable, Comparable<String>, CharSequence,
+               Constable, ConstantDesc {
+
+
+    @Stable
+    private final byte[] value;
+```
+
+* 从源码分析:
+  * 字符串继承了"可序列化(Serializable)"接口,所以其可序列化
+  * 实现了Comparable\<String\>接口,可以同类间比较大小
+
+* __字面量__都存在<u>方法区的字符串常量池</u>(JDK7以后几个版本有各种变化)中
+  * 可以用字面量给字符串变量赋值
+  
+  * 常量池中不会有一模一样(equals)的两个字符串
+
+  * 连接和修改操作会重新指定字符串变量指定的字面量内存区域(体现不可变性)
+  
+##### 1.1.1 String对象的创建:
+
+  ```java
+  String str = "hello";
+  
+    String s1 = new String(); //this.value = new char[0];
+    String s2 = new (String original);//this.value = original.value
+    String s3 = new String(char [] a);//this.value =     Arrays.copyOf(value,value.length)
+    String s4 = new String (char[] a , int startIndex,int count);
+  
+    //and so on
+  ```
+
+  * 所以 字面量赋值和构造器传入字面量的方式并不相同.
+    * 字面量赋值,变量直接指向字面量地址
+    * 而构造器传值,变量不指向字面量,只是` value`指向字面量地址
+
+##### 1.1.2 拼接与字面量地址:
+
+```java
+		String s1 = "javaEE";
+        String s2 = "hadoop";
+        String s3 = "javaEEhadoop";
+        String s4 = "javaEE" + "hadoop"; //因为s4是两个常量.所以在常量池声明
+        String s5 = s1 + "hadoop";
+        String s6 = "javaEE" + s2;
+        String s7 = s1 + s2;
+		String s8 = (s1 + s2).intern(); //直接返回该字符串value的地址(即字面量的地址)
+
+        System.out.println(s3 == s4);//true
+        System.out.println(s3 == s5);//false
+        System.out.println(s3 == s6);//false
+        System.out.println(s3 == s7);//false
+        System.out.println(s5 == s6);//false
+		System.out.println(s3 == s8);//false
+```
+
+* 若拼接的是两个常量,则结果<u>返回的变量</u>指向常量池
+* 若拼接含有变量.则<u>结果的value</u>指向常量池,新变量出现在__堆__中
+
+![image-20200508192214453](C:\Users\carrzhou\AppData\Roaming\Typora\typora-user-images\image-20200508192214453.png)
+
+
+
+##### 1.1.3 常用方法
+
+| 方法                                               | 作用                                                      |
+| -------------------------------------------------- | --------------------------------------------------------- |
+| int **length**()                                   | 返回字符串长度                                            |
+| char **charAt**(int index)                         | 返回index索引的字符                                       |
+| boolean **isEmpy**()                               | 判断是否为空(数组length是否为0)                           |
+| String **toLowerCase**()                           | 返回一个小写版字符串                                      |
+| String **toUpperCase(**)                           | 返回一个大写版字符串                                      |
+| String **trim**()                                  | 返回一个忽略前后空白的字符串                              |
+| boolean **equals**(Object obj)                     | 返回是否equals                                            |
+| boolean **equalsIgnoreCase**(String another)       | 忽略大小写的equals                                        |
+| String **conca**t(String)                          | 拼接,等价于"+"                                            |
+| int **CompareTo**(String an)                       | 比较两个字符串大小,涉及到排序                             |
+| String **substring**(int beginindex)               | 返回从begin截到末尾的字符串子串                           |
+| String **substring**(int beginindex,int endindex)  | 返回begin(含)到end(不含)的子串                            |
+| boolean **endsWith**(String suffix)                | 字符串是否以指定字符串结束                                |
+| boolean **startsWith**(String prefix)              | 字符串是否已指定前缀开始                                  |
+| boolean **startsWith**(String prefix, int toffset) | 测试此字符串从某索引开始是否以prefix为前缀                |
+| boolean **contains**(String)                       | 该字符串是否包含那个子串                                  |
+| int **indexOf**(String str)                        | 查看字符串中是否有子串str,有则返回第一次起始索引,否则-1   |
+| int **indexOf**(String str,int fromIndex)          | 同上,不过原字符串从from找起                               |
+| int **LastIndexOf**(String str)                    | 查看字符串中是否有子串str,有则返回最后一次起始索引,否则-1 |
+| int **LastIndexOf**(String str,int fromIndex)      | 同上,从from开始__向左搜索__,找最后一个(索引大)            |
+| String **replace(**char a,char b)                  | 把字符串a字符替换成b字符                                  |
+| String **replace**(CharSequence a,CharSequence b)  | 把子串a都改成子串b                                        |
+| regex                                              | 正则表达式参数                                            |
+| String **replaceAll**(String regex,String re)      | 把符合正则表达式的替换成re                                |
+| boolean **matches**(String regex)                  | 检查字符串是否符合正则表达式                              |
+| String [] **split**(String regex)                  | 用正则表达式分割字符串                                    |
+| String [] **split**(String regex,int limit)        | 最多分limit个                                             |
+|                                                    |                                                           |
+|                                                    |                                                           |
+
