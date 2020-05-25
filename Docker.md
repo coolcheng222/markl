@@ -70,3 +70,259 @@ __开发自己运维(DevOps)__,两者界限逐渐模糊.
 
 打包好的环境就是镜像文件,通过镜像生成Docker容器.一个容器运行一种服务.
 
+---
+
+### 7. 怎么工作的
+
+Docker是一个CS结构系统,守护进程运行在主机上,然后通过Socket连接从客户端访问,守护进程从客户端接收命令并管理运行在主机上的容器.<u>容器是一个运行时环境,也就是集装箱</u>.
+
+Docker比起VM有更少的抽象层.
+
+-------
+
+## 二. 常用命令
+
+### 1. 帮助命令
+
+```bash
+docker version
+docker info
+docker --help
+```
+
+### 2. 镜像命令
+
+* 查看镜像
+
+```bash
+docker images #列出本地的镜像
+#REPOSITOR    TAG                      IMAGE ID         CREATED           SIZE
+#镜像仓库源	  镜像标签(默认latest)        镜像ID        	创建时间		镜像大小
+
+#选项:
+docker images -a #显示所有镜像(包括中间映像层)
+docker images -q #只显示镜像id
+docker images --digests #多一个DIGEST栏
+docker images --no-trunc #显示完整的镜像信息
+```
+
+* 查找镜像
+
+  * 去hub.docker.com查找
+  * 在docker中查找
+
+  ```bash
+  docker search 名字
+  
+  #选项
+  docker search -s 数字 tomcat #搜索star数大于数字的镜像
+  docker search --no-trunc tomcat #显示完整镜像信息
+  docker search --automated tomcat#只列出automated build类型的镜像
+  ```
+
+* 下载镜像
+
+  ```bash
+  docker pull 镜像名字# -->等价于docker pull 名字:latest
+  ```
+
+* 删除镜像
+
+  ```bash
+  docker rmi 镜像名字 #默认latest
+  
+  # 选项
+  docker rmi -f #强制删除
+  docker rmi -f $(docker images -qa) #全部删除
+  ```
+
+  
+
+### 3. 容器命令
+
+前提条件: 有镜像才能创建容器
+
+以CentOS容器为例
+
+* __新建并启动容器__:
+
+  ```bash
+  docker run [选项] IMAGE [command] [arg..]
+  # 新建并启动,这个IMAGE可以是image ID
+  #选项:
+  docker run -it image #i:以交互的模式运行容器,t:为容器重新分配一个伪终端
+  docker run --name 名字 image #给容器起别名
+  docker run -p 主机端口(给docker分配的对外端口):docker容器端口(真的) (8888:8080) image
+  docker run -P #随机分配端口
+  
+  
+  #在运行以后,进入了Docker中的CentOS,并且让你进入了伪终端的命令行
+  [root@localhost ~]# docker run -it 470671670cac
+  [root@08cc16b4c861 /]# pwd
+  #上一行就是Docker中的CentOS环境的伪终端,跟外端CentOS不是一套环境(是全新的CentOS环境)
+  ```
+
+* __列出所有正在运行的容器:__
+
+  ```bash
+  docker ps
+  #CONTAINER ID  IMAGE       COMMAND   CREATED    STATUS      PORTS   NAMES
+  #容器id         镜像id       ???      创建时间     状态         端口?    名字
+  
+  docker ps -l #显示上一个开始运行的
+  docker ps -a #显示所有运行(过)的
+  docker ps -n 3 #显示上3次开始运行的
+  docker ps -q #只显示容器编号
+  ```
+
+* __退出运行的容器__:
+
+  ```bash
+  exit(退出) 
+  或者 
+  ctrl+P+Q(暂时退出,不影响容器运行)
+  ```
+
+* __启动/停止容器__:
+
+```bash
+docker start 容器名或id
+docker restart 容器名或id
+docker stop 容器名或id #缓慢关闭
+docker kill 容器名或id #强制马上关闭
+```
+
+* __删除已停止容器__:
+
+```bash
+docker rm 容器id
+docker rm -f 容器ID #强制删除
+docker rm -f $(docker ps -a -q) #强制删除多个容器
+docker ps -aq | xargs docker rm #同上
+```
+
+### 3. 容器命令plus
+
+* __启动守护式容器__:
+
+  ```bash
+  docker run -d 容器名/id #并返回容器id
+  ```
+
+  * 注意: Docker后台运行**必须有前台进程**,容器运行的命令如果不是那些一直挂起的命令(top,tail),**就会自动退出**.这是一项docker机制.
+
+* __查看容器日志__
+
+  ```bash
+  docker logs -f -t --tail 数字 容器ID
+  # -t 加入时间戳
+  # -f 跟随最新的日志打印(实时更新)
+  # --tail显示最后多少条
+  ```
+
+* __查看容器内运行的进程__:
+
+  ```bash
+  docker top ID
+  ```
+
+* __查看容器内部细节__
+
+  ```bash
+  docker inspect ID
+  ```
+
+* __进入正在运行的容器并命令行交互__
+
+  ```bash
+  docker attach ID #进入容器
+  docker exec -t ID 命令 #在容器中(没进去)使用命令并返回结果
+  #如果命令是 /bin/bash 就等于打开了里面的shell,就等于进去了
+  ```
+
+* __从容器内拷贝文件到主机上__
+
+  ```bash
+  docker cp 容器ID:容器内路径 主机路径
+  ```
+
+
+### 4. 容器commit
+
+```bash
+docker commit -m="信息" -a="作者" 容器id 要创建的镜像名:[标签名]
+#提交容器副本作为新的镜像
+```
+
+
+
+## 三. 镜像原理
+
+* __镜像是什么:__
+  * 镜像是一种轻量级,可执行的独立软件包.用来打包软件运行环境和基于环境开发的软件.
+
+### 1. 联合文件系统
+
+__UnionFS__是一种分层,轻量级,高性能的文件系统,它支持对文件系统的修改作为一次提交一层层的叠加.同时可以将不同的目录挂载到同一个虚拟文件系统下
+
+* 是Docker镜像的基础
+* 特性: 一次加载多个文件系统,但从外面看起来只能看到一个文件系统,联合加载会把多层文件系统叠加,这样最终的文件会包含所有底层文件和目录.
+
+### 2. Docker镜像加载
+
+docker镜像由一层层的文件系统组成(unionFS)
+
+* __bootfs__(boot文件系统): 主要包含bootloader和kernel
+
+  ,bootloader负责加载kernel(内核). 在docker镜像**最底层就是bootfs**,相当于加载内核,加载完以后内存中含有内核,bootfs会被系统自动卸载.
+
+* __rootfs__(root文件系统): 在bootfs之上.类似于"发行版",包含linux中的标准目录和文件.
+
+
+
+对于一个精简的OS,rootfs可以很小,因为直接用host的kernel,只需要提供rootfs就行了
+
+对于一个环境复杂的,可能会变得很大.
+
+* 这种分层的好处就是:共享资源.比如共享linux内核只要一个就够了
+
+
+
+## 四 . 容器数据卷
+
+我们希望:
+
+* 容器数据持久化
+* 可以容器间共享数据
+
+容器产生的数据如果不用docker commit产生新的镜像就没法保存,所以我们需要__卷__
+
+
+
+### 1. 用V命令在容器内添加
+
+```bash
+docker run -it -v /宿主机绝对路径目录:/容器内目录 镜像名
+#文件夹都可以用这个命令生成
+# 实现主机和容器数据共享
+# 容器退出后主机修改对数据卷依然有效
+```
+
+* 查看是否挂载:
+
+  ```bash
+  docker inspect 容器id
+  # 找"Volumes"
+  ```
+
+* 带权限:
+
+  ```bash
+  docker run -it -v /宿主机绝对路径目录:/容器内目录:ro 镜像名
+  # ro: read only 能传输文件,但容器不能创建和修改和删除文件
+  # 
+  ```
+
+  
+
+  

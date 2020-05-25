@@ -1,4 +1,4 @@
-
+****
 
 # JAVA
 
@@ -524,6 +524,7 @@ try{
 
 * 语法: 在函数声明后,指明可能出现的异常类型
 * 执行时出现异常会生成异常类对象,若此对象满足throws后的内容,抛出(给调用者)
+* 运行时异常可以不写throws
 
 ```java
 public class ThrowsTest {
@@ -2384,6 +2385,7 @@ public final class String
 
 * 若拼接的是两个常量,则结果<u>返回的变量</u>指向常量池
 * 若拼接含有变量.则<u>结果的value</u>指向常量池,新变量出现在__堆__中
+* 若拼接含有的变量都是final变量,则看做常量拼接
 
 ![image-20200508192214453](C:\Users\carrzhou\AppData\Roaming\Typora\typora-user-images\image-20200508192214453.png)
 
@@ -2423,3 +2425,1130 @@ public final class String
 |                                                    |                                                           |
 |                                                    |                                                           |
 
+##### 1.1.4 String和char[]/byte[]的转换
+
+String --> char[]:
+
+* 调用`toCharArray()`方法
+
+char[] --> String:
+
+* 使用String构造器
+
+String --> byte[]:(编码)
+
+* 调用String的`getBytes()`(使用默认字符集)
+
+* 或者getBytes(String charsetName)改变字符集
+
+  ```jva
+  str1.getBytes("gbk");
+  //编码: 字符串-->字节(看得懂-看不懂)
+  //解码: 字节-->字符串(看不懂-看得懂)
+  ```
+
+byte[] -->String(解码):
+
+* 使用构造器String(byte[])
+* String(byte[], charsetName)
+
+---------
+
+#### 1.2 StringBuffer / StringBuilder类
+
+| String                  | StringBuffer       | StringBuilder      |
+| ----------------------- | ------------------ | ------------------ |
+| 1.0                     | 1.0                | 1.5                |
+| 不可变的字符序列(final) | 可变的字符序列     | 可变的字符序列     |
+|                         | 线程安全.效率低    | 线程不安全.效率高  |
+| 底层使用char[]数组      | 底层使用char[]数组 | 底层使用char[]数组 |
+|                         |                    |                    |
+
+StringBuffer和StringBuilder大抵相同,就是线程和效率方面不同
+
+##### 1.2.1 创建StringBuffer和添加字符
+
+```java
+StringBuffer sb1 = new StringBuffer(); //底层创建了一个16长度的char[]
+StringBuffer sb2 = new StringBuffer(String);
+//创建一个(string长度+16)长度的char[],调用append方法
+StringBuffer sb3 = new StringBuffer(int);//用int指定底层value长度
+//要求参数不为null
+
+sb1.append('a');//向字符串末尾添加字符
+sb1.append(str);//向字符串末尾添加Strong
+sb1.append(任意类型); //向末尾添加: 基本数据类型用拼接操作, 引用类型调用toString并拼接
+sb1.length(); // 返回字符串有意义的长度
+```
+
+* 如果一开始创建的char[]装不下了会考虑扩容*(原长度*2 + 2)
+
+##### 1.2.2 常用方法
+
+除了append以外,很多和String重复
+
+| 方法                                  | 作用                                      | 是否修改 |
+| ------------------------------------- | ----------------------------------------- | -------- |
+| **delete**(int start,int end)         | 删除指定范围内容(左闭右开),并返回         | 是       |
+| **replace**(int start,int end,String) | 替换指定范围内容,并返回                   | 是       |
+| **insert**(int offset,任意类型)       | 在offset位置插入toString或拼接内容,并返回 | 是       |
+| **reverse**()                         | 翻转字符串,并返回                         | 是       |
+| indexOf(String str)                   | 返回str首次出现位置或-1                   | 否       |
+| subString(int,int)                    | 返回子串                                  | 否       |
+| charAt(index)                         | 返回index的字符                           | 否       |
+| setCharAt(index,char)                 | 设置index的字符                           | 是       |
+|                                       |                                           |          |
+
+--------------------
+
+### 2. 日期时间系列
+
+#### 2.1 System的方法
+
+System中有`public static long currentTimeMillis()`方法,返回当前时间与1970-01-01 00:00:00之间的毫秒差.
+
+当前时间与1970-01-01 00:00:00之间的毫秒差,俗称__时间戳__
+
+#### 2.2 Date类
+
+`java.util.Date` 还有其<u>子类</u>`java.sql.Date`(对应数据库日期类型),这里主要说util中的那个
+
+##### 2.2.1 两个构造器的使用
+
+```java
+new Date(); //当前时间构造器
+//toString()的返回值:
+//Sun May 10 20:10:45 CST 2020 类似这种格式
+
+new Date(long date);//传入时间戳即可
+```
+
+##### 2.2.2 方法
+
+| 方法      | 作用                   |
+| --------- | ---------------------- |
+| getTime() | 返回当前时间戳(毫秒数) |
+|           |                        |
+|           |                        |
+
+-----
+
+#### 2.3 java.text.SimpleDateFormate
+
+可格式化的日期,其操作分为__格式化__(日期(Date)->文本)和__解析__(反之)
+
+有种工具类的感觉
+
+* __实例化__
+
+  ```java
+  SimpleDateFormat sdf = new SimpleDateFormat(); //按照默认格式格式化和解析
+  //2020/5/12 下午6:53
+  
+  SimpleDateFormat sdf = new SimpleDateFormat(String);//按照模板字符串格式化和解析;
+  ```
+
+* 方法:
+
+  ```java
+  sdf.format(Date) ; //格式化date并返回字符串
+  sdf.parse(String); //解析string并返回date,会抛异常
+  ```
+
+* 格式字符串:
+
+  | 字符 | 代表     | 1个连续          | 两个     | 三个         | 四个                             |
+  | ---- | -------- | ---------------- | -------- | ------------ | -------------------------------- |
+  | y    | 年       | 填充到位         | 两位     | 四位         | 四位                             |
+  | M    | 月       | 填充到位         | 至少两位 | 出现汉字"月" | 完全用汉字表示(匹配时可以用数字) |
+  | d    | 日       | 填充到位         | 至少两位 | 至少三位     | 以此类推                         |
+  | h    | 时       | 有几个填充到几位 |          |              |                                  |
+  | m    | 分       | 同上             |          |              |                                  |
+  | s    | 秒       | 同上             |          |              |                                  |
+  | G    | 显示公元 | 几位没区别?      |          |              |                                  |
+
+  
+
+--------------
+
+#### 2.4 Calendar抽象类
+
+java.util.Calenda
+
+* __创建__:
+
+可以调用其子类__GregorianCalendar__的构造器实例化
+
+还能调用__Calendar.getInstance()__静态方法获得一个子类(就是上一行那个)对象(用Calendar接收)
+
+* __常用方法__:
+
+  ```java
+  //默认创建的Calendar对象针对当前时间
+  //get()
+  calendar.get(int);//这个参数指的是Calendar的静态属性,自己查
+  //返回一个int
+  
+  //set()
+  calendar.set(静态属性int值,新数字);//把某时间属性改值
+  
+  //add()
+  calendar.add(属性int值,数字);//把属性加上数字,如果超出月份/年份会按常理进入下个月/年
+  
+  //getTime()
+  calendar.getTime(); //返回一个Date
+  //setTime()
+  calendar.setTime(Date);// 把时间变成Date的时间
+  ```
+
+* 注意:
+
+  * 一月是0,12月是11
+  * 周日是1,周六是7
+
+------------
+
+#### 2.4 java.time系列(JDK8)
+
+新日期处理有如下几个包:
+
+> **java.time** : 包含值对象的基础包
+> java.time.chrono : 提供对不同的日历系统的访问
+> **java.time.format** : 格式化和解析
+> java.time.temporal : 包括底层框架和扩展特性
+> java.time.zone :包含时区支持的类
+
+##### 2.4.1 Local系列
+
+`LocalDate`,`LocalTime`,`LocalDateTime`
+
+![image-20200512200005435](C:\Users\carrzhou\AppData\Roaming\Typora\typora-user-images\image-20200512200005435.png)
+
+```java
+
+public void testDate(){
+    //实例化相关: now,of
+        LocalDate localDate = LocalDate.now();
+        LocalTime localTime = LocalTime.now();
+        LocalDateTime localDateTime = LocalDateTime.now();
+    	
+    	LocalDate ee = LocalDate.of(2020,10,6);//of的参数看API,无偏移量指定日期和时间
+    //**********************
+    	//get系列:看表格自己用,不需要参数,带Value的返回数字,不带的返回单词
+    	//with系列: 设置就完事了,不改变原日期,返回一个新的Local系列对象
+    	//plus/minus系列: 你懂的,不改变原日期,只返回
+    
+    }
+```
+
+--------------
+
+##### 2.4.2 Instant类
+
+跟时间戳类似,但这个以纳秒为单位,更精确
+
+```java
+//toString: 返回给人类看的时间字符串
+//实例化
+Instant haha = Instant.now();
+Instant haha2 = Instant.ofEpochMilli(long);//用毫秒数指定
+    
+//
+haha.atOffset(Zone对象);//设置时区
+haha.atOffset(ZoneOffset.ofHours(8));//东8区
+```
+
+##### 2.4.3 DateTimeFormatter类
+
+在java.time.format中
+
+**![image-20200512201950259](C:\Users\carrzhou\AppData\Roaming\Typora\typora-user-images\image-20200512201950259.png)**
+
+-------
+
+### 3. 比较器
+
+Java比较器指的是两个__接口__.
+
+* __分类__:
+  * 自然排序: `java.lang.Comparable` 接口
+  * 定制排序: `java.util.Comparator` 类
+
+#### 3.1 Comparable接口的使用
+
+1. 像String,包装类等实现了`Comparable`接口,重写了compareTo()方法,就可以用`Arrays.sort`和`Collections.sort`排序了
+
+2. 重写compareTo()的规则:
+   * 如果this大于(排序在后)形参obj则返回正整数,等于则0,小于则负数
+
+3. **自定义类实现Comparable接**__口__
+   * 实现Comparable接口
+   * 重写public int CompareTo(Object o)
+
+```java
+
+class Goods implements Comparable{
+    String name;
+    int price;
+
+    public Goods(String name, int price) {
+        this.name = name;
+        this.price = price;
+    }
+
+    @Override
+    public int compareTo(Object o) {
+        if(o instanceof Goods){
+            Goods goods = (Goods)o;
+            if(this.price > goods.price){
+                return 1;
+            }else if(this.price < goods.price){
+                return -1;
+            }else{
+                return 0;
+            }//或者return Double.compare(price,o.price)
+        }
+    }
+```
+
+-------
+
+#### 3.2 Comparaor定制排序
+
+若Comparable没有实现(且不方便修改代码)或者不希望按Comparable排序,就用Comparator
+
+* 实现接口以后要重写的方法:
+
+  * ```java
+    int compare(T o1, T o2);
+    //返回值原则和Comparable一致
+    ```
+
+* __对应使用的排序方法__:
+
+  * ```java
+    public static <T> void sort(T[] a, Comparator<? super T> c);
+    //Arrays类中的方法
+    //传入数组和对应Comparator可以排序
+    //看不懂可以无视泛型
+    ```
+
+-------------
+
+### 4. System系统类
+
+System类有三个属性,跟流有关:
+
+![image-20200513194418910](C:\Users\carrzhou\AppData\Roaming\Typora\typora-user-images\image-20200513194418910.png)
+
+System的方法都是静态的:
+
+| 方法                                | 作用                            |
+| ----------------------------------- | ------------------------------- |
+| native long **currentTimeMillis**() | 返回时间戳                      |
+| void **exit**(int status)           | 退出程序,反0位正常              |
+| void **gc**()                       | 请求垃圾回收,至于是否回收看系统 |
+| String **getProperty**(String key)  | 根据key获取相应值(key见下图)    |
+
+![image-20200513194849895](C:\Users\carrzhou\AppData\Roaming\Typora\typora-user-images\image-20200513194849895.png)
+
+--------------
+
+### 5. Math数学类
+
+一般是double进double出
+
+![image-20200513195156801](C:\Users\carrzhou\AppData\Roaming\Typora\typora-user-images\image-20200513195156801.png)
+
+---------
+
+### 6. BigInteger和BigDecimal
+
+在`java.math`包中,表示任意精度的不可变的整数或浮点数
+
+![image-20200513195329664](C:\Users\carrzhou\AppData\Roaming\Typora\typora-user-images\image-20200513195329664.png)
+
+![image-20200513195343041](C:\Users\carrzhou\AppData\Roaming\Typora\typora-user-images\image-20200513195343041.png)
+
+---------
+
+浮点型
+
+![image-20200513195504217](C:\Users\carrzhou\AppData\Roaming\Typora\typora-user-images\image-20200513195504217.png)
+
+![image-20200513195635213](C:\Users\carrzhou\AppData\Roaming\Typora\typora-user-images\image-20200513195635213.png)
+
+---------------------------
+
+## 四. 枚举类
+
+这个枚举类适用于__类的对象只有有限个确定的__,特别是__一组常量__
+
+### 1. 自定义枚举类
+
+步骤:
+
+> 1. 私有化构造器 并给对象属性赋值
+> 2. 声明属性(private且final)
+> 3. 提供当前枚举类的多个对象
+>    * **在类声明中提供公开的static的final的类对象(作为属性)**
+> 4. 其他诉求: 获得对象的属性(getter,setter),toString之类的
+
+```java
+class Season{
+    //
+    private final String seasonName;
+    private final String seasonDesc;
+
+    private Season(String seasonName,String seasonDesc){
+        this.seasonDesc = seasonDesc;
+        this.seasonName = seasonName;
+    }
+
+
+    public static final Season SPRING = new Season("spring","haha");
+    public static final Season SUMMER = new Season("summer","re");
+    public static final Season AUTUMN = new Season("autumn","haiing");
+    public static final Season WINTER = new Season("winter","leng");
+
+}
+```
+
+---------
+
+### 2. enum关键字定义枚举类
+
+enum声明的类都默认继承于`java.lang.Enum`,可以实现接口.
+
+* **定义步骤**:
+
+  * 把class改成enum
+  * 提供枚举类对象(在枚举类的**最上面**),格式如下
+
+  ```java
+     SPRING("spring","haha"),
+      SUMMER("summer","re"),
+      AUTUMN("autumn","haiing"),
+      WINTER("winter","leng");
+  //括号内为对应构造器的参数,没属性可以不写
+  //各个变量之间用逗号,末尾用分号
+  ```
+
+  * 提供属性和构造器之类的,toString已经被重写过.
+  * 使用:
+
+```java
+
+   public static void main(String[] args) {
+        Season summer = Season.SUMMER;
+        System.out.println(summer);//输出SUMMER
+    }//跟自定义一样
+```
+
+* **整体代码演示**:
+
+```java
+public class EnumTest2 {
+    public static void main(String[] args) {
+        Season summer = Season.SUMMER;
+        System.out.println(summer);
+    }
+}
+
+enum Season {
+
+
+    //    public static final Season1 SPRING = new Season1("spring","haha");
+//    public static final Season1 SUMMER = new Season1("summer","re");
+//    public static final Season1 AUTUMN = new Season1("autumn","haiing");
+//    public static final Season1 WINTER = new Season1("winter","leng");
+    SPRING("spring","haha"),
+    SUMMER("summer","re"),
+    AUTUMN("autumn","haiing"),
+    WINTER("winter","leng");
+
+    private final String seasonName;
+    private final String seasonDesc;
+
+    private Season(String seasonName, String seasonDesc) {
+        this.seasonDesc = seasonDesc;
+        this.seasonName = seasonName;
+    }
+
+}
+```
+
+* **常用方法:**
+
+| 方法         | 作用                                  | 静态? |
+| ------------ | ------------------------------------- | ----- |
+| values()     | 返回一个对象数组,存储了所有枚举的对象 | 静态  |
+| valueOf(str) | 把字符串转成对象                      | 静态  |
+| toString     | 返回当前对象对应的名称                | 非    |
+
+* __实现接口__:
+  * 总的实现和普通类一致
+  * 不过还能做操作
+  * 每个枚举类对象都能重写接口中的方法
+
+```java
+ SPRING("spring","haha"){
+        @Override
+        public void show() {
+            
+        }
+    },//在对象后面加个大括号就开始重写
+    SUMMER("summer","re"){
+        @Override
+        public void show() {
+            
+        }
+    },
+    AUTUMN("autumn","haiing"){
+        @Override
+        public void show() {
+            
+        }
+    },
+    WINTER("winter","leng"){
+        @Override
+        public void show() {
+            
+        }
+    };
+```
+
+---------
+
+## 五. 注解(Annotation)
+
+Jdk5.0开始增加了对__元数据(MetaData)__的支持,也就是__注解(Annotation)__
+
+注解其实就是代码中的特殊标记,这些标记可以在编译,类加载,或者运行时被读取,并执行相应的处理.通过使用注解,程序员可以在不改变原有逻辑的情况下,在源文件中嵌入一些补充信息.代码分析工具,开发工具,部署工具可以根据注解进行验证或部署
+
+Annotation可以像修饰符一样被使用,修饰包,类,构造器,方法,成员变量,参数,局部变量的声明.
+
+$\color\red{框架=注解+反射+设计模式}$
+
+### 1. 生成文档相关的注解
+
+```java
+@author  标明作者,多个作者用逗号分开
+@version 该类模块的版本
+@see    参考转向,也就是相关主题
+@since 从哪个版本开始增加的
+    //*************以下只用于方法
+@param+形参名+说明 对参数的说明,没参数不能写
+@return+类型+说明 对返回值的说明,没返回值不能写
+@exception+异常类型+说明 对异常的说明,没有throws不能写
+
+```
+
+### 2. 编译时格式检查注解
+
+```java
+@Override 限定重写父类方法
+@Deprecated 表示修饰的元素已过时,一般有更好的选择或者修饰的结构危险
+@SuppressWarnings 抑制编译器警告
+```
+
+### 3. 跟踪代码依赖性,替代配置文件
+
+### 4. 自定义注解
+
+1. 声明为`@interface`,自动继承`java.lang.annotation.Annotation`接口
+
+   ```java
+   public @interface
+   ```
+
+2. Annotation的成员变量以无参数方法的形式声明.方法名和返回值制定了变量名和类型,称为__配置参数__,其类型只能是: `String`,`Class`,`enum`,`Annotation`,`基本数据类型`,和`以上类型的数组`
+
+3. 如果只有一个成员变量,建议叫做`value`
+
+4. 可以用`default`指定成员变量默认值
+
+5. 若没有成员变量,只有表识作用
+
+   ```java
+   public @interface AnnotationTest {
+       String value() default "hello";
+   }
+   
+   @AnnotationTest(value = "haha")
+   class Person{
+   
+   }
+   ```
+
+------
+
+### 5. 元注解
+
+对现有的注解进行解释说明的注解为__元注解__(meta-annotation),在声明注解的时候加的注解
+
+* 四个元注解:
+
+  ```java
+  @Retention: 只能用于修饰一个Annotation,指明该注解的声明周期.包含一个RetentionPolicy类型(枚举类)的变量,必须指定值;
+  //枚举值: 
+  //   RetentionPolicy.SOUCE:源文件有效(在源文件保留),编译器直接丢弃
+  //   RetentionPolicy.CLASS: 在class文件(类加载)保留,JVM不会保留注解,这是默认值
+  //   RetentionPolicy.RUNTIME: 运行时有效,JVM会保留注释,注释可以通过反射获取
+  
+  @Target: 指定被修饰的注解能修饰那些元素,包含一个value变量(枚举类数组);
+  //如下图:
+  //@Target(value={FIELD,CONSTRUCTOR}) 举例
+  @Documented: 用于指定修饰的注解将被javadoc工具提取成文档.(RetentionPolicy必须为RUNTIME)
+     ;
+  @Inherited: 指定该注解有继承性,被其修饰的类的子类自动拥有该注解
+  ```
+
+  ![image-20200514200111827](C:\Users\carrzhou\AppData\Roaming\Typora\typora-user-images\image-20200514200111827.png)
+
+
+
+### 6. 可重复注解(8.0)
+
+之前的注解不能一种注解写两个,以前想这样得建一个注解包含value为这个注解的数组.
+
+8.0以后就重复就完事了:
+
+```java
+@Repeatable(包含想要修饰的注解数组的注解.class) //作为想要修饰的注解的元注解\
+//要求里面外面声明周期一致 target一致,inherit一致
+```
+
+### 7. 类型注解(8.0)
+
+@target元注解的参数又多了:
+
+1. TYPE_PARAMETER: 表示该注解能写在类型变量的声明语句中
+2. TYPE_USE: 表示该注解能卸载使用类型的任何语句中
+
+![image-20200515184445899](C:\Users\carrzhou\AppData\Roaming\Typora\typora-user-images\image-20200515184445899.png)
+
+![image-20200515184517294](C:\Users\carrzhou\AppData\Roaming\Typora\typora-user-images\image-20200515184517294.png)
+
+-------------
+
+## 六. 集合
+
+### 1. 集合框架概述
+
+集合和数组都能存储(指内存)和操作多个对象,统称为__Java容器__
+
+在`java.util`中
+
+* __数组的弊端__:
+  * 长度不可修改
+  * 提供的方法有限,不能满足插入删除操作
+  * 对于数组实际元素的个数要自己找
+  * 有序且可重复,对于某些需求不好
+
+### 2. 集合API体系
+
+* __Collection__体系: 单列数据,定义了存储一组对象的方法的集合
+  * List接口 :有序且可重复(动态数组)
+  * Set接口 : 无序且不可重(集合)
+* __Map__体系: 双列数据,__"Key-Value"__映射关系的集合
+
+### 3. Collection接口
+
+![image-20200520200334782](C:\Users\carrzhou\AppData\Roaming\Typora\typora-user-images\image-20200520200334782.png)
+
+接口中的方法:
+
+| 方法                                  | 规范                                            |
+| ------------------------------------- | ----------------------------------------------- |
+| boolean **add**(Object o)             | 添加元素                                        |
+| int **size**()                        | 元素个数                                        |
+| boolean **addAll**(Collection c)      | 把另一个集合的元素加过来                        |
+| boolean **isEmpty**()                 | 是否为空                                        |
+| void **clear**()                      | 清空集合元素                                    |
+| boolean **contains**(Object o)        | 用equals()查看是否含有对象                      |
+| boolean **remove**(Object o)          | 用equals删除对象(移除相等的第一个)              |
+| boolean **containsAll**(Collection c) | 是否包含所有c中的元素                           |
+| boolean **removeAl**l(Collection c)   | (差集)移除在c中的所有元素,没有变就返回false     |
+| boolean **retainAll**(Collection c)   | (交集)移除不在c中的所有元素,如果没变就返回false |
+| boolean **equals**(Object o)          | 就看看元素是不是完全一样(跟有无序有关)          |
+| long **hashCode**()                   | 返回对象的hash值                                |
+| Object [] **toArray**()               | 转换为数组                                      |
+| 数组-->集合                           | List Arrays.asList(数组)                        |
+| **iterator**()                        | 返回Iterator接口的实例,用于遍历集合元素         |
+|                                       |                                                 |
+|                                       |                                                 |
+
+### 4. Iterator接口
+
+Iterator接口也称为**迭代器(设计模式**),主要用于遍历Collection的元素.
+
+是一种能访问容器对象中的各个元素,而又不暴露对象的内部细节
+
+* 方法
+
+| 方法      | 作用                            |
+| --------- | ------------------------------- |
+| next()    | 取下一个数据,到底以后再取报异常 |
+| hasNext() | 检查next()会不会异常            |
+| remove()  | 把当前的元素移除                |
+
+```java
+//推荐遍历方法
+while(iterator.hasNext()){
+    iterator.next();
+}
+```
+
+* __next/remove注意事项__:
+  * 指针先下移,然后返回元素
+  * remove必须在一次next后且不能再一次next后remove两次
+
+### 5. foreach/增强for(5.0)
+
+__增强for循环__可以用于遍历集合和数组.
+
+```java
+for (Object o : coll) {//for(集合/数组中元素类型 对象: 集合/数组)
+}
+```
+
+理解过程: 自动的取元素一个一个赋给o.
+
+**对于集合,内部调的还是迭代器.**
+
+### 6. List接口
+
+数组通常被__List__替代,其元素__有序可重__,每个元素有其对应顺序索引
+
+其常用实现类有`ArrayList`,`LinkedList`,`Vector`
+
+#### 6.1 实现类比较
+
+同:
+
+* 都实现了List接口,存储特点相同
+
+异:
+
+|      | ArrayList    | LinkedList           | Vector       |
+| ---- | ------------ | -------------------- | ------------ |
+| 头衔 | 主要实现类   |                      | 古老实现类   |
+| 线程 | 不安全       |                      | 安全         |
+| 效率 | 高           | 对插入删除操作效率高 | 低           |
+| 备注 | 底层Object[] | 底层双向链表         | 基本没人用了 |
+
+#### 6.2 ArrayList
+
+* JDK7环境:
+
+  * 构造器:
+
+    * 空参构造器底层创建了长度为10的数组
+    * 有参构造器指定数组长度,或者把集合转换成ArrayList
+  * add满时扩容1.5倍并拷贝
+* JDK8环境:
+  * 构造器:
+    * 空参构造器创建空的数组
+  * 在add才时创建10长度的数组,要满了扩容1.5倍
+
+#### 6.2 LinkedList
+
+add的时候加在链表最后
+
+#### 6.3 List接口常用方法
+
+| 方法                                        | 作用                                          |
+| ------------------------------------------- | --------------------------------------------- |
+| void **add**(int index,Object)              | 把对象插入索引的位置                          |
+| boolean **addAll**(int index,Collection)    | 把集合的所有元素插入索引,不写index则加到最后  |
+| Object **get**(int index)                   | 获取索引的元素                                |
+| int **indexOf**(Object obj)                 | 返回对象首次在集合中出现的位置(equals),不然-1 |
+| Object **remove**(int index)                | 删除索引的元素,并把元素返回                   |
+| Object **set**(int index,Object ele)        | 把索引的元素设置成ele,并返回之前的元素        |
+| List **subList**(int fromIndex,int toIndex) | 左闭右开的返回子List                          |
+|                                             |                                               |
+|                                             |                                               |
+
+### 7. Set接口
+
+无序的,不可重的Set,==Set接口没有声明新的方法==
+
+实现类有`HashSet`,`LinkedHashSet`,`TreeSet`
+
+#### 7.1 实现类对比
+
+|           | HashSet           | LinkedHashSet        | TreeSet               |
+| --------- | ----------------- | -------------------- | --------------------- |
+| 头衔      | 主要实现类        | HashSet的子类        |                       |
+| 线程安全  | 不                | 不                   |                       |
+| 存储null? | 可以,只能一个null | 可以,只能一个null    | 不行                  |
+| 遍历      | 不能按照顺序      | 可以按照添加顺序遍历 | 排序后遍历            |
+| 底层      | hashMap,哈希表    | hashMap,哈希表       | 红黑树                |
+| 排序      | 不                | 不                   | 可以排序,需要比较接口 |
+
+#### 7.2 什么叫无序不可重
+
+* 无序性:(以hashSet为例)
+  * 不等于随机性
+  * 存储数据根据`hashCode`方法(Object方法)寻找索引
+* 不可重复性:
+  * 先取决于`hashCode`方法的返回值而不是equals
+  * 原则上,属性相同则应该返回同样的哈希值(看你的类如何重写了)
+  * 哈希值一样,再equals判断,若一样则一样
+
+* __HashSet添加元素流程__:
+  * 先hash
+  * 若hashCode遇到占用,则链式存储
+  * 7.0是用新元素放在数组中,而原元素被链出去;8.0则新元素加载链表后面
+* LinkedHashSet元素本质:
+  
+* 可以**有序遍历,**因为**每个元素有前驱后继指针**
+  
+* __HashCode方法__:
+
+  * Object内的`hashCode`类似于随机值
+
+  * Object内的`toString`:
+
+    ```java
+    public String toString() {
+        return getClass().getName() + "@" + Integer.toHexString(hashCode());
+    }//后面接的就是hashCode
+    ```
+
+  * 重写时<u>最好保证属性一样时hashCode一样</u>,<u>属性不一样时hashCode不一样</u>
+
+#### 7.3 TreeSet
+
+1. 向TreeSet中添加数据要求是**相同类的对象**.
+2. TreeSet的元素在迭代器中是__排好序的__(正序)(Comparable自然排序)
+3. **自然排序compareTo反回0的时候,判为重复.**
+4. 在TreeSet构造器中传入comparator构造器进行定制排序,判重标准为compare方法
+
+### 8. Map系列
+
+![image-20200520200355268](C:\Users\carrzhou\AppData\Roaming\Typora\typora-user-images\image-20200520200355268.png)
+
+`Map`是双列数据.存储内容为`KV键值对`
+
+其中,value可以重复,而key不能重复
+
+#### 8.1 实现类对比
+
+|      | HashMap               | LinkedHashMap         | TreeMap     | Hashtable  | Properties                    |
+| ---- | --------------------- | --------------------- | ----------- | ---------- | ----------------------------- |
+| 头衔 | 主要实现类            | HashMap的子类         |             | 古老实现类 |                               |
+| 线程 | 不安全                | 不安全                |             | 安全       |                               |
+| 效率 | 高                    | 海星                  |             | 低         |                               |
+| null | 能存null的K和V        |                       |             | 不能存null |                               |
+| 特点 |                       | 可以按照添加顺序遍历! | 会对key排序 |            | 处理配置文件,KV都是String类型 |
+| 底层 | 数组+链表+(红黑树8.0) |                       |             |            |                               |
+|      |                       |                       |             |            |                               |
+
+#### 8.2 HashMap底层
+
+`key`是由不可重复的<u>Set</u>存储,而`value`无序可重,用<u>Collection</u>存储.
+
+* 所以key的类型需要hashCode和equals
+* value的类型需要equals
+
+一个K<u>V键值对</u>在Map中记作一个`Entry`,拥有两个属性Key和Value
+
+* Entry:
+  
+* 无序不可重,整体用<u>Set</u>存放
+  
+* __jdk7__:
+
+  ```java
+  HashMap map = new HashMap();
+  //实例化以后,底层创建了长度是16的Entry数组(Entry [] table)
+  //若指定长度.则底层数组的长度是不小于指定长度的2的指数
+  
+  map.put(key1,value1);
+  //首先调用key的hashCode,得到在Entry数组中的存放位置
+  //情况1:如果此位置为空,则添加成功
+  
+  //如果此位置数据不为空,则比较(添加用链表方式,七(放在数组里)上八下):
+  //情况2: 若key的hashCode和已有key的hashCode都不同,则添加成功
+  
+  //若存在key的hashCode相同:
+  //情况3: 若equals不同,则添加成功
+  //情况4: 若equals相同,则新值覆盖旧值
+  //扩容: 2倍并拷贝 在总数超过threshold且不是情况1的时候扩容
+  ```
+
+* **jdk8和7的不同:**
+
+  1. new HashMap()底层不创建16长度的数组
+
+  2. 底层是Node[]数组而不是Entry[]\(LinkedHashMap依然是Entry\)
+
+  3. 首次put是创建16长度的数组
+
+  4. jdk7的底层结构只有:<u>数组+链表</u>,而8有:<u>数组+链表+红黑树</u>
+
+     当数组某一个索引位置上的元素以链表形式存在的个数大于8且数组长度超过64,则此索引的数据用**红黑树**存储
+
+```JAVA
+threshold = DEFAULT_LOAD_FACTOR(加载因子)*DEFAULT_INITIAL_CAPACITY(初始容量)
+```
+
+常量术语:
+
+| **英文**                     | **中文译名**                            | **默认值**    |
+| ---------------------------- | --------------------------------------- | ------------- |
+| **DEFAULT_LOAD_FACTOR**      | 默认加(负)载因子                        | 0.75          |
+| **DEFAULT_INITIAL_CAPACITY** | 默认容量                                | 16            |
+| **threshold**                | 扩容临界值(几个元素)                    | 容量*加载因子 |
+| **TREEIFY_THRESHOLD**        | Bucket中链表长度大于此值转化为红黑树    | 8             |
+| **MIN_TREEIFY_CAPACITY**     | 桶中Node被树化的最小hash表容量,否则扩容 | 64            |
+
+负(加)载因子大小决定了HashMap的数据密度.越大则发生碰撞的几率越大,链表越容易唱.越小越容易触发扩容密度也小,可能浪费一点空间.
+
+#### 8.3 Map常用方法
+
+| 方法                                        | 作用                                                       |
+| ------------------------------------------- | ---------------------------------------------------------- |
+| Object **put**(Object key,Object value)     | 将制定KV添加(或修改)当前map对象中,返回V                    |
+| void **putAll**(map m)                      | 把m的所有对象添加(修改)到当前map                           |
+| Object **remove**(Object key)               | 根据key删除KV,返回V或者null                                |
+| void **clear**()                            | 清空map                                                    |
+|                                             |                                                            |
+| Object **get**(Object key)                  | 获取指定key的value或null                                   |
+| boolean **containsValue**(Object value)     | 是否包含指定value                                          |
+| boolean **containsKey**(Object key)         | 是否包含指定key                                            |
+| int **size**()                              | 元素个数                                                   |
+| boolean **isEmpty**()                       | 是否为空(size0)                                            |
+| boolean __equals__(Object obj)              | 是否相等                                                   |
+| **元视图操作方法**,获取以后可以用迭代器遍历 |                                                            |
+| Set **keySet**()                            | 返回所有key构成的set集合                                   |
+| Collection **values**()                     | 返回所有value构成的Collection集合<u>(两者顺序是契合的)</u> |
+| Set **EntrySet**()                          | 返回放entry(Map的内部接口)的set                            |
+| __Entry的方法__                             |                                                            |
+| **getKey**()                                | 获得Key                                                    |
+| **getValue**()                              | 获得Value                                                  |
+|                                             |                                                            |
+
+#### 8.4 TreeMap
+
+key类型必须相同.
+
+自然排序和定制排序和TreeSet基本相同
+
+#### 8.5 Properties
+
+读取配置文件,可以是`.properties`后缀
+
+```txt
+#jdbc.properties
+name=Tom
+password=abc123
+```
+
+```java
+public static void main(String[] args) throws IOException {
+    Properties pros = new Properties();
+    FileInputStream fis;
+
+    fis = new FileInputStream("jdbc.properties");
+    pros.load(fis);
+    String name = pros.getProperty("name");
+    String password = pros.getProperty("password");
+    System.out.println(name + " " + password);
+}
+```
+
+### 9. Collections工具类
+
+都是静态方法,针对的对象为集合类`Set`,`List`,`Map`
+
+| 方法                                               | 作用                            |
+| -------------------------------------------------- | ------------------------------- |
+| **reverse**(List)                                  | 翻转List元素                    |
+| **shuffle**(List)                                  | 对List的集合元素随机排序        |
+| **sort**(List)                                     | 排序(自然)/要求类型之间可以比较 |
+| **sort**(List,Comparator)                          | 排序(定制)/要求同上             |
+| **swap**(List,int,int)                             | 交换指定索引的元素              |
+|                                                    |                                 |
+| Object **max**(Collection)                         | 获取最大值(自然)/要求同sort     |
+| Object **max**(Collection,Comparator)              | 获取最大值(定制)/要求同sort     |
+| Object **min**(Collection)                         | 获取最小值(自然)/要求同sort     |
+| Object **min**(Collection,Comparator)              | 获取最小值(定制)/要求同sort     |
+| int **frequency**(Collection,Object)               | 查看某元素出现了几次            |
+| void **copy**(List dest,List src)                  | 把src复制到dest中               |
+| boolean **replaceAll**(List,Object old,Object new) | 把旧值换新,返回有没有换         |
+| 同步控制                                           |                                 |
+| synchronized类型名(对象)                           | 返回一个线程安全的对应集合对象  |
+|                                                    |                                 |
+|                                                    |                                 |
+
+```java
+//copy函数注意事项
+//1. 需要dest比src的size大
+//2. src从dest最开始覆盖元素
+//3. 创建同样size的List的方法如下:
+List dest = Arrays.asList(new Object[list.size()]);//放着null的List
+```
+
+---------
+
+## 七. 泛型(Generic)
+
+### 1. 为何有泛型
+
+集合容器类在设计阶段和声明阶段不能确定这个容器到底实际存的是什么类型,在`1.5`前只能用Object,在此之后可以使用泛型.
+
+因为只有元素的类型不确定,而其管理方式之类的都是确定<u>的,所以把元素的类型设计成一个==参数==</u>,这个类型<u>类型参数</u>就叫**泛型**
+
+.诸如`Collection<E>`,`List<E>`,这个E就是类型参数,也即泛型.
+
+这个参数可以标识 类中的<u>某个属性的类型,</u>或者<u>某个方法的参数</u> 或 <u>返回值</u> 类型.
+
+* 为什么有泛型,无泛型的问题:
+  * 类型不安全
+  * 使用时需要强转,强转时可能出现`ClassCastException`
+
+泛型举例: 集合类,Comparator,Comparable都有泛型
+
+* **分类:**
+  * **泛型类/接口**
+  * **泛型方法**
+
+### 2. 使用泛型类/接口
+
+注意:
+
+1. 只能用Object的子类
+2. 拥有泛型的类型,由`类名<类型参数>`合成一个真正能用的类名
+3. 一个类可以有多个泛型,比如map键值
+4. 可以嵌套,比如`entrySet()`返回的`Set<Map.Entry<K,V>>`
+5. 没实例化默认`Object`
+6. jdk7开始,new后面的构造器可以省略泛型参数
+
+* __集合中使用泛型举例__:
+
+  ```java
+  //使用:
+  // 1. 在实例化时可以指定具体的泛型类型
+  // 2. 指明完后,在集合类或是接口中,凡是定义接口或类时用到泛型的位置,泛型都指定为实例化时的类型
+  
+  @Test
+      public void test2(){
+          ArrayList<Integer> list = new ArrayList<Integer>();
+          list.add(123);
+          list.add(44);
+          list.add(23);
+          list.add(11);
+          list.add(133);
+  
+  //        list.add("Tom");
+          for (Integer integer : list) {
+              System.out.println(integer);
+          }
+      }
+  
+  	//用map说明泛型可以不止一个
+      @Test
+      public void test3(){
+          Map<String ,Integer> map = new HashMap<String,Integer>();
+      }
+  ```
+
+### 3. 自定义泛型类
+
+通常用大写的`T` `E` `KV(键值)`表示泛型
+
+有泛型建议就用泛型,Object太麻烦.
+
+```
+public class Order<T> {
+    String orderName;
+    int orderId;
+    T orderT;
+
+    public Order(){
+
+    }
+    public Order(String orderName,int orderId,T orderT){
+        this.orderName = orderName;
+        this.orderId = orderId;
+        this.orderT = orderT;
+    }
+
+    public T getOrderT(){
+        return orderT;
+    }
+    public void setOrderT(T orderT){
+        this.orderT = orderT;
+    }
+}
+```
+
+>细节:
+>
+>* 定义构造器不要尖括号泛型,实例化调用的时候需要
+>
+>* 泛型不同的引用不能互相赋值
+>
+>* 这里指的是:
+>
+> ```java
+>  //举例:
+>  ArrayList<Integer>;
+>  ArrayList<String>; //这两个虽然都是ArrayList类,但不能互相赋值
+> ```
+>
+>
+>* **静态方法/属性**不能用自己类/接口的泛型
+>
+>* **异常类**不能用泛型
+>
+>* 创建泛型类数组:
+>
+>  ```java
+>  T[] arr = (T[]) new Object[10];
+>  //不能直接按原来的方法造
+>  //就是一个Object数组只能放T和T子类的对象
+>  //也就是可以用T[],但不能直接造T数组
+>  ```
+>
+>  
+>
+>
+
+#### 3.1 继承有泛型的类
+
+有以下几种情况:
+
+* __在继承的时候指明泛型参数__,重写方法之类的也需要把泛型写成具体类型,继承方法和属性等结构时泛型自动被指定类型,子类不再有泛型
+
+  ```java
+  class SubOrder extends Order<Integer>
+  //什么都不写就默认Object类型了
+  ```
+
+* __子类也是泛型__,在声名时子类和父类后面加同一个名字,那么子类也是泛型了
+
+  ```java
+  public class SubOrder1<T> extends Order<T> {
+  ```
+
+* __子类保留一部分泛型__,实现一部分泛型:
+
+  ```java
+  class Son<T2> extends Father<Integer,T2>{
+  ```
+
+* __子类额外提出了泛型需求__:
+
+  ```java
+  class Son<A,B> extends Father...{
+  //右边不重要
+  //左边Son可以按原语法继承或实现泛型,然后在尖括号内增加自己的泛型
+  class Son<T,A,B> extends Father<Integer,T>{
+  //之类的
+  ```
+
+  
