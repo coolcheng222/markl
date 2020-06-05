@@ -533,8 +533,188 @@ import time
 //里面有time.Time类型
 var now time.Time = time.Now()//获取当前日期时间
 now.format("2006  01 02 15:04:05") //格式化,也可以取一部分写
+time.Unix() //返回时间戳
+time.UnixNano()//返回纳秒时间戳
 ```
 
 ![image-20200525114831060](C:\Users\carrzhou\AppData\Roaming\Typora\typora-user-images\image-20200525114831060.png)
 
 ![image-20200525115159005](C:\Users\carrzhou\AppData\Roaming\Typora\typora-user-images\image-20200525115159005.png)
+
+![image-20200525123916017](C:\Users\carrzhou\AppData\Roaming\Typora\typora-user-images\image-20200525123916017.png)
+
+### 3. buildin
+
+```go
+num2 := new(int) //num2是int指针
+```
+
+### 4. 异常处理
+
+`defer` `recover` `panic`
+
+```go
+func test(){
+    defer func(){
+        err := recover() //捕获异常
+        if err != nil{
+            fmt.Println("err=",err)
+        }
+    }()
+}//然后错误就被跳过了,继续执行
+```
+
+* 自定义error
+  * `errors.New("信息")`会返回一个error类型
+  * `panic(err)`输出错误信息并退出程序
+
+## 八. 数组
+
+### 1. 数组
+
+数组是值类型
+
+```go
+var hens [6]float64
+for i := 0; i < len(hens); i++ {
+   fmt.Println(hens[i])
+}
+```
+
+* __初始化__
+
+```go
+var arr1 [3]int = [3]int {1,2,3}
+var arr2 = [3]int {1,2,3}
+var arr3 = [...] int {6,7,8}
+var arr4 = [...]int {0:100,2:200,1:99} //按照下标赋值
+```
+
+### 2. for range遍历
+
+```go
+for index,value := range array01{
+    
+}
+```
+
+### 3. 注意点
+
+* 数组长度和类型固定
+* `var arr [] int`是一个slice切片,不是数组
+* __传递数组不会对数组的元素产生影响__
+* 想要处理,可以传入指向数组的指针`var arr *[3]int`
+
+* 不同长度的数组不能互相赋值
+
+## 九. 切片(slice)
+
+我们总会需要动态数组,不能一直用定长的数组.用__切片__,解决问题
+
+这是数组的__引用__,传递时符合引用传递机制
+
+* 切片和数组的用法很相似,包括遍历,下标,len都一样,用cap函数查看容量
+
+* 容量概念:目前可以存放的元素个数(动态变化)
+
+* 定义语法:
+
+  ```go
+  var aaa []类型
+  
+  ```
+
+### 1. 类似python的切片
+
+```go
+var intArr[5]int = [...]int{1,2,3,4,5}
+
+slice := intArr[1:3] //左闭右开,slice是切片类型
+//这样子由切片维护数组,切片能修改数组
+```
+
+### 2. make切片
+
+```go
+var slice [] int = make([]int,len,[cap(可选)])
+//cap>=len
+```
+
+3:也可以直接把数组常量赋给它,容量和len一样
+
+### 3. 底层
+
+切片底层维护一个数组,如果用python方式赋值,那么数组是对程序员可见的,看到的数组就是slice的数组
+
+,如果用make就是数组不可见的.
+
+### 4. 遍历
+
+```go
+//常规方法
+for i := 0; i < len(sli); i++ {
+		fmt.Println(sli[i])
+	}
+
+//for range
+	for index,value := range sli{
+		fmt.Println(index,value)
+	}
+```
+
+### 5. 注意事项
+
+* 切片初始化时仍然不能越界,范围在[0-len]之间,可以动态增长
+* 切片可以简化初始化:
+  * arr[0:end]
+  * arr[:ed]
+  * arr[start:]
+  * arr[0:len(arr)]
+* 切片可以继续切片
+
+### 6. 动态增长
+
+`append函数`,将元素添加到末尾,有时可以扩容
+
+参数是可变的
+
+扩容会重新创建数组,指向有所改变,原数组如果没有人指就垃圾回收
+
+```go
+slice4 = append(slice3,400,500,400)
+//注意: silce3是不变化的
+slice4 = append(slice3,slice3...)
+//再追加一个切片的内容
+//...是固定写法
+```
+
+* 我们看一下这个迷惑的数组切片:
+
+  * 一开始切片的cap是从取得值到数组末尾算cap
+  * 切片指向数组对应地址.改变切片也会改变数组
+  * 然后如果你append的操作如果不超出cap,是不会改变指向地址的
+  * 也就是说append有可能改变原数组,也会影响其他切片
+  * 但是如果一个append超出了cap就会重新分配一个内存空间
+
+  * 也就是说,如果append不超出,切片还是返回原来的,如果超出了返回的才是不同的切片
+
+### 7. 拷贝
+
+```go
+copy(oara1,para2)//拷贝内容,覆盖,后面可以是数组或切片
+```
+
+* 如果para2比1长,那只会填满1然后剩下的放弃
+
+### 8. string和slice
+
+string底层是[n]byte,可以切片处理
+
+```go
+str := "hellp@atguigu"
+slice := str[:6] //这是string类型!!!!!!!!!!!!
+fmt.Println(slice)
+```
+
+* string和slice底层指向的是同一个数组
+* 想要改变string,需要强制转换[]byte(切片)或[]rune,再传回string

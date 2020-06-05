@@ -299,7 +299,7 @@ docker镜像由一层层的文件系统组成(unionFS)
 
 
 
-### 1. 用V命令在容器内添加
+### 1. 用v命令在容器内添加
 
 ```bash
 docker run -it -v /宿主机绝对路径目录:/容器内目录 镜像名
@@ -326,3 +326,177 @@ docker run -it -v /宿主机绝对路径目录:/容器内目录 镜像名
   
 
   
+
+### 2. DockerFile添加
+
+* 类比:
+  * javaEE : Hello.java ----Hello.class
+  * Docker : images -----DockerFile
+
+* 步骤:
+
+  > 1. 根目录建立`mydocker`文件夹并进入
+  >
+  > 2. 在Dockerfile中使用`VOLUME`指令给镜像添加一个或多个数据卷
+  >
+  > 3. DockerFile构建(在文件夹下vim Dockerfile)
+  >
+  >    ```dockerfile
+  >    #volume test
+  >    FROM centos
+  >    VOLUME ["/dataVolumeContainer1","/dataVolumeContainer2"]
+  >    #dockerfile的volume只能放从机目录
+  >    CMD echo "finished,----------success"
+  >    CMD /bin/bashv
+  >    ```
+  >
+  > 4. docker build生成镜像
+  >
+  >    ```bash
+  >    docker build -f <dockerfile> -t  . #这里有个.
+  >    ```
+  >
+  > 5. 本机上的对应文件
+  >
+  >    ```bash
+  >    # 用docker inspect 看
+  >                    "Source": "/var/lib/docker/volumes/d2a0bafd66dafce1f81630433894c26b37db94f58d7ced8528df0113ccf9c3b1/_data",
+  >    ```
+  >
+  > 6. 如果不能写,在run后面加`--privileged=true`
+
+### 3. 数据卷容器
+
+命名的容器挂载数据卷,其他容器通过挂载这个实现数据共享,挂载数据卷的容器,称为数据卷容器.
+
+简单的说,容器间的传递共享
+
+> 1. 先启动一个父容器dc01,用之前弄得dockerfile镜像做
+>
+> 2.  将dc02和dc03继承自父容器
+>
+>    ```bash
+>    docker run -it --name dc02  --volumes-from dc01 zzyy/centos
+>    ```
+>
+> 3. 这样多个容器共享数据卷,可以达到互通有无的结果
+>
+> 4. 这个数据卷的共享周期一直到没有容器用它为止
+
+
+
+## 五. dockerfile
+
+### 1. 是什么
+
+__Dockerfile__是用来构建Docker镜像的构建文件.是由一系列命令和参数构成的脚本
+
+**dockerfile**是软件原材料(开发).**docker镜像**是软件交付品(交付标准),**docker容器**是软件运行态(部署运维)
+
+* 步骤:
+  * 编写dockerfile
+  * docker build
+  * docker run
+
+### 2. 基本知识
+
+1. 每条保留字指令都必须为大写字母,并且后面跟随至少一个参数
+2. 指令从上到下顺序执行
+3. #表示注释
+4. 每条指令会创建一个新的镜像层,并对镜像提交
+
+### 3. 执行流程
+
+1. docker从基础镜像运行一个容器(FROM)
+2. 执行一条指令并对容器作出修改
+3. 执行类似docker commit提交一个新的镜像层
+4. 基于刚刚提交的运行一个新容器
+5. 执行下一条dockerfile指令直到完成
+
+### 4. 保留字
+
+> __FROM__: 基础镜像,当前镜像基于哪个镜像
+>
+> * `scratch`是镜像本源(类似Object)
+>
+> __MAINTAINER__: 镜像维护者的姓名和邮箱地址
+>
+> __RUN__: 构造时需要运行的额外命令
+>
+> __EXPOSE__: 当前容器对外暴露的端口
+>
+> __WORKDIR__: 创建容器后,终端默认登录进来的工作目录,一个落脚点(默认根目录)
+>
+> __ENV__ : 构建环境变量,参数为`变量名 值`,可以用在dockerfile的其他指令
+>
+> * WORKDIR $MY_PATH
+>
+> __ADD__: 将宿主机目录下的文件拷贝进镜像,并且自动处理URL,和解压tar压缩包
+>
+> __COPY__: 类似add,但是没有自动功能
+>
+> * ```bash
+>   COPY src dest
+>   COPY ["src","dest"]
+>   ```
+>
+> __VOLUME__: 容器数据卷,用于保存和持久化
+>
+> __CMD__: 指定一个容器启动时要运行的命令
+>
+> * __dockerfile可以有多个CMD命令,但是只有最后一个生效__
+>
+> * CMD会被docker run后面加的参数覆盖
+>
+> * ```dockerfile
+>   CMD <命令>#shell格式
+>   CMD ["可执行文件","参数1",...]#exec格式
+>   CMD ["参数1",...] # 参数列表格式,在指定`ENTRYPOINT`指令后,用CMD指定具体参数
+>   ```
+>
+> __ENTRYPOINT__: 指定一个容器启动时要运行的命令
+>
+> * 有多个时变成追加
+>
+> __ONBUILD__: 当构建一个被继承的Dockerfile时运行命令,父镜像在被子继承后父镜像的onbuild被触发
+>
+> 
+
+```dockerfile
+#举例:定制版centos
+FROM centos
+
+ENV mypath /tmp
+WORKDIR $mypath
+
+RUN yum -y install vim
+RUN yum -y install net-tools
+
+EXPOSE 80
+CMD /bin/bash
+```
+
+### 5. 使用
+
+```bash
+# 构建
+docker build -f dockerfile -t 新镜像名字:TAG .
+#.表示当前路径
+#.是真正参数
+```
+
+### 6. CMD和ENTRYPOINT
+
+CMD执行最后一条,并且会被docker run的命令覆盖
+
+而ENTRYPOINT会追加,并且把docker run后面的参数传递给ENTRYPOINT
+
+比如调用时加`-i`,ENTRYPOINT就会加-i选项(会覆盖cmd,cmd变成ep的参数)
+
+### 7. ONBUILD
+
+```dockerfile
+ONBUILD RUN echo "im father"
+```
+
+只要有镜像继承了这个镜像,build的时候就会运行这个命令

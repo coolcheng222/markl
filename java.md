@@ -2493,10 +2493,10 @@ sb1.length(); // 返回字符串有意义的长度
 | **replace**(int start,int end,String) | 替换指定范围内容,并返回                   | 是       |
 | **insert**(int offset,任意类型)       | 在offset位置插入toString或拼接内容,并返回 | 是       |
 | **reverse**()                         | 翻转字符串,并返回                         | 是       |
-| indexOf(String str)                   | 返回str首次出现位置或-1                   | 否       |
-| subString(int,int)                    | 返回子串                                  | 否       |
-| charAt(index)                         | 返回index的字符                           | 否       |
-| setCharAt(index,char)                 | 设置index的字符                           | 是       |
+| **indexOf**(String str)               | 返回str首次出现位置或-1                   | 否       |
+| **subString**(int,int)                | 返回子串                                  | 否       |
+| **charAt**(index)                     | 返回index的字符                           | 否       |
+| **setCharAt**(index,char)             | 设置index的字符                           | 是       |
 |                                       |                                           |          |
 
 --------------------
@@ -3059,25 +3059,25 @@ $\color\red{框架=注解+反射+设计模式}$
 
 接口中的方法:
 
-| 方法                                  | 规范                                            |
-| ------------------------------------- | ----------------------------------------------- |
-| boolean **add**(Object o)             | 添加元素                                        |
-| int **size**()                        | 元素个数                                        |
-| boolean **addAll**(Collection c)      | 把另一个集合的元素加过来                        |
-| boolean **isEmpty**()                 | 是否为空                                        |
-| void **clear**()                      | 清空集合元素                                    |
-| boolean **contains**(Object o)        | 用equals()查看是否含有对象                      |
-| boolean **remove**(Object o)          | 用equals删除对象(移除相等的第一个)              |
-| boolean **containsAll**(Collection c) | 是否包含所有c中的元素                           |
-| boolean **removeAl**l(Collection c)   | (差集)移除在c中的所有元素,没有变就返回false     |
-| boolean **retainAll**(Collection c)   | (交集)移除不在c中的所有元素,如果没变就返回false |
-| boolean **equals**(Object o)          | 就看看元素是不是完全一样(跟有无序有关)          |
-| long **hashCode**()                   | 返回对象的hash值                                |
-| Object [] **toArray**()               | 转换为数组                                      |
-| 数组-->集合                           | List Arrays.asList(数组)                        |
-| **iterator**()                        | 返回Iterator接口的实例,用于遍历集合元素         |
-|                                       |                                                 |
-|                                       |                                                 |
+| 方法                                  | 规范                                                         |
+| ------------------------------------- | ------------------------------------------------------------ |
+| boolean **add**(Object o)             | 添加元素                                                     |
+| int **size**()                        | 元素个数                                                     |
+| boolean **addAll**(Collection c)      | 把另一个集合的元素加过来                                     |
+| boolean **isEmpty**()                 | 是否为空                                                     |
+| void **clear**()                      | 清空集合元素                                                 |
+| boolean **contains**(Object o)        | 用equals()查看是否含有对象                                   |
+| boolean **remove**(Object o)          | 用equals删除对象(移除相等的第一个)                           |
+| boolean **containsAll**(Collection c) | 是否包含所有c中的元素                                        |
+| boolean **removeAl**l(Collection c)   | (差集)移除在c中的所有元素,没有变就返回false                  |
+| boolean **retainAll**(Collection c)   | (交集)移除不在c中的所有元素,如果没变就返回false              |
+| boolean **equals**(Object o)          | 就看看元素是不是完全一样(跟有无序有关)                       |
+| long **hashCode**()                   | 返回对象的hash值                                             |
+| Object [] **toArray**()               | 转换为数组                                                   |
+| 数组-->集合                           | List Arrays.asList(数组) //建议用addAll或者构造器构造后使用,不然无法正常使用 |
+| **iterator**()                        | 返回Iterator接口的实例,用于遍历集合元素                      |
+|                                       |                                                              |
+|                                       |                                                              |
 
 ### 4. Iterator接口
 
@@ -3486,7 +3486,7 @@ public class Order<T> {
 }
 ```
 
->细节:
+>==细节:==
 >
 >* 定义构造器不要尖括号泛型,实例化调用的时候需要
 >
@@ -3518,7 +3518,7 @@ public class Order<T> {
 >
 >
 
-#### 3.1 继承有泛型的类
+#### 3.1 继承有泛型的类 
 
 有以下几种情况:
 
@@ -3552,3 +3552,1232 @@ public class Order<T> {
   ```
 
   
+
+### 4. 自定义泛型方法
+
+* 有自己的新泛型的方法叫泛型方法
+  * 只用了所属类/接口的泛型的不算
+  * 可以不在泛型类/接口中
+  * 可以__静态__
+
+```java
+public <E> List<E> copyFromArrayToList(E[] arr){//在权限修饰符后面声明泛型
+    ArrayList<E> list = new ArrayList<>();
+    for(E e : arr){
+        list.add(e);
+    }
+    return list;
+}
+```
+
+### 5. 应用场景
+
+DAO(数据库处理)可以使用泛型类,针对不同的表有不同的类(元组)
+
+### 6. 在继承方面的体现
+
+```java
+//赋值也适用于传参
+//有多态关系的数组是可以赋值的
+Object[] obj = null;
+String[] str = null;
+obj = str; //ok
+//泛型有多态关系是不能赋值的(实际不具有多态关系)
+List<Object> lobj = null;
+List<String> lstr = null;
+lobj = lstr; //报错
+//如果主要类有关系,且泛型相同,还可以多态
+List<String> ll= null;
+ArrayList<String> kk = null;
+ll = kk; //可以
+```
+
+### 7. 泛型通配符
+
+考虑到上一个知识点不能体现泛型的子父类关系,又不想失去多态的优势(调用同名对象,参数同传)
+
+所以引用通配符`?`作为泛型
+
+```java
+    public void test1() {
+        List<Object> list1 = null;
+        List<String> list2 = null;
+
+        List<?> list = null; //这个List<?>可以作为所有带泛型List的父类,实现多态
+        
+        list = list1;
+        list = list2;
+        
+        //这个东西可赋给Object 或者 你用到的泛型的公共父类
+        Object obj = list.get(1);
+    }
+```
+
+* ==注意==
+
+  * 通配符形成的变量__不能添加数据__,例外: 可以添加null
+
+  * __允许读取数据__,返回类型为`Object`
+
+  * 多个泛型可以灵活运用
+
+    ```java
+        public void test2(){
+            HashMap<String, String> mm1 = new HashMap<>();
+            Map<String,?> mm = mm1;
+            Map<?,String> mm2 = mm1;
+            Map<?,?> mm4 = mm1;
+            Map<?,?> mm3 = mm2;
+        }
+    ```
+
+* ==有限制条件的通配符==
+
+  ```java
+  List<? extends Person> list = null; //泛型只能是Person的子类或本身
+  List<? super Person> list1 = null; //泛型只能Person的父类或本身
+  ```
+
+  读: 和普通`?`一样,但可以用公共父类(例如Person接收),这里extends改变了编译情况
+
+  写: extends不能写,因为父类不能赋给子类,如果现实类比传入类小,则会出现问题
+
+  ​	   super可以写,但是要小于等于super后面的类.
+
+### 8. 泛型擦除
+
+​           1):泛型编译之后就消失了(泛型自动擦除);
+
+​           2):**当把带有泛型的集合赋给不带泛型的集合,此时泛型被擦除(手动擦除)**.
+
+## 八. IO流(上)
+
+### 1. File类的使用
+
+`java.io.File`: 文件和文件目录路径的抽象表示形式,与平台无关.
+
+File能新建,删除,重命名文件和目录,但不能访问文件内容本身.访问需要IO流.
+
+想要在Java中表示一个真实存在的文件或目录就需要一个对应的File对象.
+
+File对象可以作为参数传给流的构造器.
+
+**File对象对应的文件不一定需要真实存在**
+
+* __构造器__:
+
+  ```java
+  File file = new File("Hello.txt"); //字符串参数的构造器,传入文件或目录绝对/相对路径
+  //idea的相对路径
+  //Test是相对于module下而言的(E:\\javaidea\\day07)
+  //main是相对当前Project的
+  //unix和url用正斜杠"/"
+  //跨平台时要慎用
+  //File提供了分隔符常量File.separator,可以跨平台用
+  File file3 = new File("E:\\javaidea","day07");//传入上一级目录,和本体目录/文件(都是String)
+  File file4 = new File(file3,"src"); //File类型的上一级目录和String类本体
+  ```
+
+* __常用方法__:
+
+| 方法                                   | 功能                                                         |
+| -------------------------------------- | ------------------------------------------------------------ |
+| public String **getAbsolutePath**()    | 获取绝对路径                                                 |
+| public String **getPath**()            | 获取你写的路径                                               |
+| public String **getName**()            | 获取当前文件/目录名字                                        |
+| public String **getParent**()          | 获取父目录路径                                               |
+| public long **length**()               | 获取文件长度,不存在反0                                       |
+| public long  **lastModified**()        | 获取最近修改时间,不存在反0                                   |
+| **下面这两个适用于目录**               |                                                              |
+| public String [] **list**()            | 获取指定目录下所有文件或者文件目录的名称数组                 |
+| public File[] **listFiles**()          | 获取指定目录下所有文件或文件目录的File数组                   |
+|                                        |                                                              |
+| public boolean **renameTo**(File dest) | 把文件重命名为指定文件路径(dest),dest不能存在(**相当于剪切**) |
+|                                        |                                                              |
+|                                        |                                                              |
+|                                        |                                                              |
+
+* __常用判断方法__:
+
+  | 方法                     | 作用                 |
+  | ------------------------ | -------------------- |
+  | boolean **isDiectory**() | 是否为目录,不存在反F |
+  | boolean **isFile**()     | 是否为文件,不存在反F |
+  | boolean **exists**()     | 是否存在             |
+  | boolean **canRead**()    | 是否可读,不存在F     |
+  | boolean **canWrite**()   | 是否可写,不存在F     |
+  | boolean **isHidden**()   | 是否隐藏,不存在F     |
+  |                          |                      |
+
+* __创建删除方法__
+
+  | 方法                               | 作用                                             |
+  | ---------------------------------- | ------------------------------------------------ |
+  | public boolean **createNewFile**() | 创建自己文件,如果自己存在就返回false(不递归创建) |
+  | public boolean **mkdir**()         | 创建自己目录,如果存在就false,(不递归创建)        |
+  | boolean **mkdirs**()               | 递归创建自己目录,存在反false                     |
+  | boolean **delete**()               | 删除自己文件或空目录(不走回收站),不存在返回false |
+  |                                    |                                                  |
+  |                                    |                                                  |
+  |                                    |                                                  |
+  |                                    |                                                  |
+  |                                    |                                                  |
+
+  
+
+### 2. IO流原理和流的分类
+
+`I/O`技术是非常实用的技术__用于处理设备之间的数据传输__,如文件读写,网络通讯.
+
+Java程序中,对数据的输入输出操作用`流(Stream)`的方式进行
+
+`java.io`包下提供了各种流类和接口,以获取不同种类数据,并通过<u>标准的方法</u>输入输出数据
+
+* 按**流向**分类
+  * __输出__: 将程序(内存)数据输出到磁盘光盘等存储设备 
+  * __输入__: 读取外部数据到程序(内存)中
+
+* 按__操作数据单位__分类
+  * __字节流(8bit)__: 适合图片等
+  * __字符流(16bit)__ : 适合文本
+* 按__流的角色__分类
+  * **节点流** : 直接作用在文件上的流
+  * **处理流** : 包在节点流外面的流(作用在流的基础之上),不直接处理文件
+
+IO流的==抽象基类==:
+
+| (抽象基类) | 字节流           | 字符流     |
+| ---------- | ---------------- | ---------- |
+| 输入流     | **InputStream**  | **Reader** |
+| 输出流     | **OutputStream** | **Writer** |
+
+从四个类派生出的体系都是以这些类为后缀的
+
+![image-20200526202257760](C:\Users\carrzhou\AppData\Roaming\Typora\typora-user-images\image-20200526202257760.png)
+
+着重关注: `文件流(节点流)File`,`缓冲流Buffered`,`转换流`,`对象流Object`
+
+### 3. FileReader/FileWriter的使用
+
+#### 3.1 读入数据的基本操作
+
+> 1. 实例化File对象,指明要操作的文件
+>
+> 2. 提供具体的流FileReader
+>
+> 3. 使用提供的read()方法 **能读一个字符**,到末尾读出-1
+>
+> 4. **关闭流** 调用close()方法,有try catch的时候放到finally里(不建议用throws)
+>
+>    `Alt+Shift+Z`环绕
+
+```java
+//实例,文件字符输入流FileReader
+  @Test
+    public void test1() {//读入内容输出到控制台
+        File file = new File("hello.txt");
+        FileReader fr = null;
+        try {
+            fr = new FileReader(file);//可以用file,也可以用String路径
+
+            //要抛异常
+
+            int data = fr.read();
+            //要抛异常,如果达到末尾返回1
+            while (data != -1) {
+                System.out.println((char) data);
+                data = fr.read();
+            }
+
+//            fr.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            if (fr != null) {
+                try {
+                    fr.close();//关闭流,有异常
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+}
+```
+
+* 另:
+  * `read(char[] cbuf)`重载方法能代替`read()`
+    * 读到__填满cbuf__,并返回读的字符个数
+    * 如果直接读文件末尾,返回 -1
+    * __注意__: __这个对cbuf是覆盖操作,如果读入5个,长度为7,则只有前五个会被覆盖,后面的两个不动__
+  * 还有`read(char[]cbuf,int off,int len)`指定cbuf偏移量和填充长度
+
+#### 3.2 FileWriter的使用
+
+> 1. 提供file对象,不一定需要存在,**分追加和覆盖模式**
+> 2. 提供FileWriter对象,异常之类的和Reader差不多
+> 3. 用write()方法
+> 4. close()关闭
+
+* `write()`方法可以传: `(String)`,`(char[])`,`(字符(int))`,`(Stirng/char[],off,len`)
+* `FileWrite()`构造器可以传入第二个参数指明是否是append
+
+```java
+@Test
+public void test3(){
+    //提供file对象,不一定存在
+    File file = new File("hello1.txt");
+    //提供流
+    FileWriter fw = null;
+    try {
+        fw = new FileWriter(file,true);//提供文件流,用追加模式
+        fw.write("I have a dream");
+        fw.write('c');
+    } catch (IOException e) {
+        e.printStackTrace();
+    }finally{
+        if(fw != null){
+            try {
+                fw.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+}
+```
+
+#### 3.3 多个流的关闭
+
+我把多个流的关闭放在一个try catch中是错误的而,因为有一个异常别的就关不掉.
+
+应该:
+
+* 一个关闭放在另一个关闭的finally中
+* 或者两个关闭调用的try catch并列而行
+
+### 4. FileOutputStream/InputStream
+
+使用基本差不多,就是char(字符流)变成byte(字节流)
+
+> 读入:(和Reader差不多)
+>
+> 1. 文件
+> 2. 传入文件,使用FileInputStream构造器
+>
+> ```java
+> FileInputStream fis = new FileInputStream(file);
+> //处于trycatch考虑,最好先初始化null
+> ```
+>
+> 3. 使用和Reader差不多的read()方法`唯一不同就是传入byte[] buf`
+
+
+
+
+
+### 5. 四个文件流(节点流)总结
+
+读能读: 都用read()方法,可以空参,也可传入__对应数组__,还可以__传入数组的偏移量和填充长度__
+
+* 对于utf8文本,字节流可能出现乱码,字符流不会
+* 非文本用字符流
+
+写也一样
+
+一般用处理流,节点流不常用
+
+### 6. 缓冲流(字节型)
+
+<u>作用: 提高流的读取,写入速度</u>
+
+> 1. 造文件File
+> 2. 提供节点流(FileXxx)
+> 3. **提供处理流(缓冲流Buffered),构造器传入节点流**
+> 4. 然后调用和节点流一模一样的read(),write()方法
+> 5. 然后把所有流关了,**先关外层(缓冲),再关内层(节点)**
+>    * 其实关闭外层的同时内层也会关闭
+> 6. 写到一半可以调用bos的方法flush()手动清空缓冲区 
+
+```java
+@Test
+    public void test1(){
+
+        //造文件
+        File file1 = new File("fe.jpg");
+        File file2 = new File("fe1.jpg");
+        FileInputStream fis = null;
+        FileOutputStream fos = null;
+
+        //开流,只有节点流抛异常
+        BufferedInputStream bis = null;
+        BufferedOutputStream bos = null;
+        try {
+            fis = new FileInputStream(file1);
+            fos = new FileOutputStream(file2);
+            bis = new BufferedInputStream(fis);
+            bos = new BufferedOutputStream(fos);
+
+            byte [] buffer = new byte[10];
+
+            //复制
+            int len;
+            while((len = bis.read(buffer))!= -1){
+                bos.write(buffer,0,len);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            //关闭
+            if(bos != null) {
+                try {
+                    bos.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            if(bis != null) {
+                try {
+                    bis.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+//        可以省略
+//        fis.close();
+//        fos.close();
+    }
+```
+
+### 7. 缓冲流(字符)
+
+显然跟字节一样,我们来说不同
+
+> 可以用String接收读入的东西,使用`readline()`方法,到末尾返回null,不读换行符
+>
+> 可以用输出流的`newline()`方法写入换行符
+
+## 九. IO流(中)
+
+### 8. 转换流
+
+提供了__字节流和字符流__的转化,根据后缀,两个都属于**字符流**,__处理流__
+
+他们用的一样是`read`,`write`,参数和上面一样,注意自己用的是什么(字符/节)流.
+
+关闭的时候也可以只管处理流(转换流)
+
+`InputStreamReader`: InputSteam转成Reader(字节转字符)
+
+`OutputStreamWriter`: Writer转成OutputStream(字符转字节)
+
+* __说明__:
+  * 当字符流都是字符时,转换成字符读入更高效
+  * 字符流写入时可能乱码,转换为字节流
+  * 输入输出编码不同 时可以使用(读入字节转字符(解码),读出字符转字节(编码))
+  * ![image-20200528172504921](C:\Users\carrzhou\AppData\Roaming\Typora\typora-user-images\image-20200528172504921.png)
+
+#### 8.1 InputStreamReader构造器
+
+```java
+InputStreamReader isr0 = new InputStreamReader(InputStream in);//转换字节输入流,按idea默认字符集
+InputStreamReader isr1 = new InputStreamReader(InputStream in,String charSetName);
+InputStreamReader isr = new InputStreamReader(fis,"UTF-8");
+//指定字节流转换的字符集(名字)
+InputStreamReader isr2 = new InputStreamReader(InputStream in,CharSet cs);
+//指定字节流转换的字符集
+```
+
+* 这是读入字节流,编码集__根据文件存储的时候写的编码集__
+
+#### 8.2 OutputStreamWriter
+
+>  这是一个字符流,输出的形式是字符,在内部转换为字节
+>
+> 它的构造器传入一个`OutputStream`,和要输出的编码集(默认UTF8)
+>
+> 主要意义就是把已经转换成字符的流转回字节流,是这个意思.所以传入本身要用的字节流就行了
+
+### 9. 字符集
+
+> `ASCII` : 美国标准信息交换码,用一个字节的七位表示
+>
+> `ISO8859-1`: 拉丁码表,欧洲码表,用一个字符的8位表示
+>
+> `GB2312`: 中国的中文编码表,最多2个字节编码所有字符
+>
+> `GBK`: 中国的中文编码表升级,融合了更多中文文字符号,最多两个字节编码
+>
+> * 如何区分1个或2个字节? 首位为0,说明一个字节;为1说明两个字节
+>
+> `Unicode`: 国际标准码,融合了人类使用的所有字符,为每个字符分配唯一字符码.所有文字用两个字节表示
+>
+> `UTF-8`: (UCS Transfer Format,8意味着每8位传输数据)使用变长的1-4字节来表示字符
+>
+> * 中文3个字节
+>
+> * 变长说明:
+>
+>   * 0xxxxxxx 兼容原来的ASCII
+>   * **110**xxxxx 10xxxxxx
+>   * **1110**xxxx 10xxxxxx 10xxxxxx
+>   * **1110**xxx 10xxxxxx 10xxxxxx 10xxxxxx
+>
+>   * 对应码值见缝插针的放在x上
+
+### 10. 标准输入/输出流
+
+`System.out`: PrintStream
+
+`System.in`: InputStream
+
+* 默认输入输出方法是键盘和显示器
+
+* 可以通过System类的`setIn(InputStream)`,`setOut(PrintStream)`重新指定
+
+  标准输入流和输出流的值
+
+* 可以调用流的方法,`in`也可以传入处理流(缓冲,转换)
+
+### 11. 打印流
+
+`PrintStream`: 字节打印流
+
+`PrintWriter`: 字符打印流
+
+提供了一系列重载的__print()__和__println()__方法,用于多种数据类型的输出
+
+* 不会抛出IOException异常
+* 有自动flush功能
+* PrintStream打印的字符都被转换为该平台字符编码下的字节,如果需要打印字符建议PrinWriter
+* System.out是PrintStream的实例
+* 构造器传入文件可以用print往文件写东西
+
+### 12. 数据流
+
+是字节流,方便操作Java的基本数据类型和String的数据
+
+`DataInputStream`
+
+`DataOutputStream`
+
+套在InputStream或者OutputStream的子类上(构造器传入)
+
+* 方法:
+  * read类型()/write类型()
+  * readUTF()/writeUTF() //这个是字符串
+  * readFully(byte[] b)/writeFully(?)
+
+---------
+
+## 十. IO流(下)
+
+### 13. 对象流
+
+是字节流,处理流,考虑到数据流只能处理基本数据类型,我们还得传对象到文件和还原.
+
+后缀名可以是`.dat`
+
+`ObjectInputStream`
+
+`ObjectOutputStream`
+
+* __序列化和反序列化__:
+  * 用ObjectOutStream类保存基本类型数据或对象的机制,叫做__序列化__
+  * 用ObjectInputStream类读取基本类型数据或对象的机制,叫做__反序列化__
+  * 不能序列化`static`和`transient(这就是专门不序列化的关键字)`修饰的成员变量
+
+#### 13.1 对象的序列化机制
+
+对象的序列化机制 允许把内存中的Java对象转成和平台无关的二进制流,从而允许把这种二进制流持久的保存在磁盘上.,或者通过网络讲这种二进制流传输到另一个网络节点.当其他程序获得二进制流,就可以恢复成原来的Java对象.
+
+序列化的好处在于可将任何实现了==Serializable接口==的对象转换为字节数据,使其在保存和传输时可被还原.
+
+序列化是RMI(远程方法调用invoke)过程的参数和返回值都必须实现的机制,而RMI是JAvaEE的基础,所以序列化也是JavaEE平台的基础
+
+如果需要某个对象支持序列化机制,必须__让对象所属的类及其属性可序列化__,否则有`NotSerializableException`异常.
+
+#### 13.2 对象流操作
+
+构造器传节点流.(处理流基操)
+
+注意:__这个处理流创建的时候抛异常__
+
+流要关
+
+* 写操作,写之后记得flush刷新:
+
+  ```java
+  
+  write(int val);//方法
+  write(byte []);
+  write(byte[],off,len);
+  
+  write类型(参数);
+  //基本数据类型和处理流差不多,诸如writeInt,writeUTF
+  //引用数据类型用writeObject();
+  
+  read//也一样
+  ```
+
+  
+
+#### 13.3 自定义类的序列化和反序列化
+
+需要可序列化
+
+* 要求:
+
+  * 实现`Serializable`或者`Externalizable`,没有需要重写的方法,是标识接口.
+
+  * 提供一个这样的属性(全局常量)
+
+    ```java
+    public static final long serialVersionUID = 234234234234223L;
+    //值随便写,必须提供
+    //这个可以用来表明类的不同版本的兼容性,可以版本控制
+    //如果没写会自动生成,但修改时会变,不太好
+    //如果序列化一样,就算改了也能用默认值变回来
+    ```
+
+  * 保证类的所有属性可序列化,基本数据类型默认可序列化
+
+----
+
+### 14. 随机存取文件流
+
+`RandomAccessFile`在java.io包下,__直接继承Object类__,实现了`DataInput`,`DataOutput`接口,可读可写.
+
+支持"随机访问",程序可以直接跳到文件任意地方来__读写文件__.
+
+* 支持只访问文件的部分内容
+* 在默认情况下,写的时候要么创建文件,要么从头开始覆盖
+
+#### 14.1 操作
+
+构造器传入 路径字符串或者file 第二个参数叫__mode__(字符串类型);
+
+要关流,构造器会抛异常
+
+| mode    | 攻能                                  | 说明         |
+| ------- | ------------------------------------- | ------------ |
+| __r__   | 只读                                  | 不存在就异常 |
+| __rw__  | 读取和写入                            | 不存在就创建 |
+| __rwd__ | 读取和写入;同步文件内容的更新         |              |
+| __rws__ | 读取和写入;同步文件内容和元数据的更新 |              |
+
+* 读写操作:
+  * 和别的字节流一样
+
+#### 14.2 实现数据的插入
+
+* 两个方法
+
+  ```java
+  (void) raf.seek(Long pos); //将文件记录指针定位到pos位置(0为起始)
+  //结合File的length方法可以到末尾
+  (long) raf.getFilePointer();//获取当前文件记录指针位置
+  ```
+
+  * 注意: 这个东西是__以字节为单位的__,覆盖也是以字节为单位的
+
+### 15. NIO.2
+
+NIO支持面向缓冲区,基于通道(Channel)的IO操作.以更高效的方式进行文件读写操作
+
+`java.nio.channels.Channel`
+
+NIO.2在JDK7被引入,提供了`Path`,`Paths`,`Files`类API,Path可以看做File的升级版本.,用Paths工具类创建Patj对象.
+
+## 十一. 网络编程
+
+Java是Internet的语言,从语言级上提供了对网络应用程序上的支持,程序员能很容易的开发常见网络应用程序.
+
+Java提供的网络类库可以实现无痛网络连接,由jvm控制细节.并且实现了Java实现的一个跨平台结束了,程序员面对的是一个统一的网络编程环境
+
+### 1. 计算机网络概述
+
+把分布在不同地理区域的计算机与专门外部设备用通信线路互联成一个规模大,功能强的网络系统,从而使众多计算机可以方便的互相传递信息,共享硬件,软件,数据信息等资源.
+
+* 网络编程的目的:
+  * 直接或间接的通过网络协议与其他计算机实现数据交换,进行通信
+* 网络编程的主要问题:
+  * 如何准确地定位网络上的一台或多台的主机,定位主机上特定的应用
+    * IP和端口号
+  * 找到主机后如何可靠高效的数据传输
+    * OSI参考模型(未能推广)
+    * TCP/IP参考模型(协议)
+
+![image-20200601173822995](C:\Users\carrzhou\AppData\Roaming\Typora\typora-user-images\image-20200601173822995.png)
+
+![image-20200601173918120](C:\Users\carrzhou\AppData\Roaming\Typora\typora-user-images\image-20200601173918120.png)
+
+### 2. IP和端口号
+
+IP和端口号组合得出__网络套接字:Socket__,网络通信也可称为__Socket通信__
+
+#### 2.1IP
+
+* __IP地址__: (`InetAddress`类,一个对象对应一个IP地址)
+  * 唯一的标识Internet上的计算机(通信实体)
+  * 本地回环地址(hostAddress)`127.0.0.1` 主机名`localhost`
+  * 分类1:
+    * __IPV4__:4个字节,4个0-255,一共42亿,30亿在北美,2011年初用尽,以点分十进制表示
+    * __IPV6__: 128位,16字节,写成8个无符号整数,每个整数4个十六进制,用冒号隔开
+  * 分类2:
+    * __公网地址(万维网使用)__:
+    * __私有地址(局域网使用)__: 192.168开头就是私有地址,专门为内部使用
+  * 特点:不易记忆
+
+#### 2.2 InetAddress类
+
+在`java.net`包下
+
+```java
+//这个类对应一个IP地址
+//它对外不暴露构造器
+//以下是获得对象的方法:
+InetAddress byName = InetAddress.getByName("192.168.0.111");//输入Ipv4
+InetAddress byName1 = InetAddress.getByName("www.baidu.com");//通过域名获取ip
+System.out.println(InetAddress.getLocalHost()); // 获取localhost
+//会抛异常
+```
+
+* 附:域名解析
+  * 首先获取域名
+  * 发给DNS域名解析服务器获取ip
+    * 先找本机hosts是否有输入国的域名地址
+    * 再通过DNS服务器找
+
+#### 2.3 端口号(port)
+
+标识正在计算机上运行的进程
+
+不同进程有不同端口号,16位(0-65535)
+
+* 分类:
+  * 公认端口: 0-1023
+    * 被预先定义的服务通信占用,比如html占用80
+  * 注册端口: 1024-49151
+    * 分配给用户进程或应用程序,比如mysql3306,tomcat8080,redis6379
+  * 动态端口/私有端口:49152-65535
+
+### 3. 网络协议
+
+__网络通信协议__对速率,传输代码,代码结构,传输控制步骤,出错控制制定标准
+
+问题: 网络协议太复杂,涉及内容很多.
+
+解决: __通信协议分层思想__,将复杂成分分为简单成分,再复合起来.同层之间可以通信,上一层可以调用下一层,隔层互不影响
+
+* __传输层有两个重要协议__:
+  * TCP协议(transmission Control protocol)传输控制协议
+  * UDP协议(User Datagram Protocol)用户数据报协议
+* 而TCP和IP层的网络互联协议(IP)是一组协议,称为`TCP/IP`协议簇
+
+#### 3.1 TCP
+
+* 使用TCP协议前,须先建立TCP连接,形成数据通道
+
+* 传输前采用__三次握手__,点对点通信,可靠
+
+  ![image-20200601191415272](C:\Users\carrzhou\AppData\Roaming\Typora\typora-user-images\image-20200601191415272.png)
+
+* TCP协议通信的两个应用进程: 客户端/服务端
+
+* 可以进行大数据量的传输
+
+* 传输完毕,需要释放建立的连接(__四次挥手__),__相对UDP效率低__
+
+* ![image-20200601192400840](C:\Users\carrzhou\AppData\Roaming\Typora\typora-user-images\image-20200601192400840.png)
+
+#### 3.2 UDP
+
+* 将数据,源,目的封装成数据包,不需要建立数据连接
+* 不可靠
+* 数据包大小限制在64k内
+* 可以广播发送
+* 无需释放资源,开销小,速度快
+
+### 4. TCP网络编程
+
+网络编程其实差不多是`流`在网络通信的应用.
+
+#### 4.1 Socket
+
+网络编程需要`java.net.Socket`类,表示封装的ip和端口号
+
+```java
+//构造器
+Socket(String host,int port);
+Socket(InetAddress host ,int port);
+//都是将ip和port输入,封装到一个Socket
+```
+
+* 客户端尝试向对方发送数据
+
+  ```java
+  Socket socket = null;
+          OutputStream os = null;
+          try {
+              socket = new Socket(InetAddress.getByName("127.0.0.1"),8899);
+              os = socket.getOutputStream();//获得对方的输出流(对己方而言是输出),会抛异常
+              os.write("nihao".getBytes());
+          } catch (UnknownHostException e) {
+              e.printStackTrace();
+          } catch (IOException e) {
+              e.printStackTrace();
+          }finally{
+              if(socket != null) {
+                  try {
+                      socket.close();//socket也要关闭
+                  } catch (IOException e) {
+                      e.printStackTrace();
+                  }
+              }
+              if(os != null) {
+                  try {
+                      os.close();
+                  } catch (IOException e) {
+                      e.printStackTrace();
+                  }
+              }
+          }
+  ```
+
+  * socket需要关闭
+  * 可以用getOutputStream获取输出字节流,给对方传数据
+
+#### 4.2 服务端接收
+
+```java
+new ServerSocket(int port); //指定自己的端口号
+//记得关闭
+```
+
+```java
+public void server(){
+        ServerSocket ss = null;
+        ByteArrayOutputStream baos = null;
+        Socket socket = null;
+        InputStream is = null;
+        try {
+            ss = new ServerSocket(8899); //指定自己端口号
+            socket = ss.accept(); //获取发过来的socket
+            is = socket.getInputStream();//从socket拿输入流
+           byte [] buffer = new byte[20];
+            int len;
+            while((len = is.read(buffer)) != -1){
+                String str = new String(buffer,0,len);
+                System.out.println(str);
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }finally{
+
+            if(baos != null) {
+                try {
+                    baos.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            if(ss != null) {
+                try {
+                    ss.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            if(socket != null) {
+                try {
+                    socket.close()
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            if(is != null){
+                try {
+                    is.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+```
+
+先开服务端,再开客户端
+
+* 接收端可以调用socket的`getInetAddress`获得客户端的ip
+
+#### 4.3 总结和拓展
+
+> 客户端步骤:
+>
+> 1. 客户端创建socket,指明服务端的ip和端口号
+> 2. 获取输出流输出数据
+> 3. 关闭资源
+
+> 服务端步骤:
+>
+> 1. ServerSocket指明自己的端口号
+> 2. 调用accept()接收来自客户端的socket
+> 3. 获取输入流,读数据
+
+* **另外:**
+
+  * 有一个socket就可以互相通信,在服务端可以用outputstream,客户端也能用inputstream\
+
+  * 在服务端read()其实并不能读到`-1`,所以输出端要提醒接收端已经结束,那就用
+
+    ```java
+    socket.shutdownOutPput();//表示结束输出
+    ```
+
+    
+
+* 客户端和服务端
+  * 客户端:
+    * 自定义
+    * 浏览器
+  * 服务端
+    * 自定义
+    * Tomcat服务器
+
+### 5. UDP网络编程
+
+`java.net.DatagramSocket`和`DatagramPacket`实现了基于UDP协议的网络程序
+
+UDP不可靠,不确定数据报能送到,也不确定啥时候抵达.
+
+#### 5.1 使用
+
+`DatagramPacket`对象封装UDP数据报,在数据报中包含了发送端的IP地址和端口号,以及接收端的IP和端口号
+
+发送要抛异常,建对象要抛异常,关闭不需要抛异常(?)(socket系列的对象都要关)
+
+```java
+//构造注意事项简述
+//发送端
+ds = new DatagramSocket();//不需要指定细节, 会抛异常
+ dp = new DatagramPacket(str.getBytes(),0,str.length(),
+                    InetAddress.getLocalHost(),12345);
+//dp的构造器可以传byte[]和信息长度,可选偏移量,然后再加上ip和port
+
+//接收端
+socket = new DatagramSocket(12345);//socket创建时注明自己的端口号
+ byte[] buffer = new byte[100];
+ DatagramPacket dp = new DatagramPacket(buffer,buffer.length);//接收时指定要传入的数组,指定长度,可选偏移量
+```
+
+```java
+//发送方法
+socket.send(packet);//传入DatagramPackage对象
+socket.receive(packet);//传出DatagramPackage对象,这样数据都放在buffer里了
+byte[] rec = packet.getData();//调用方法获取数据,其实数据已经在buffer里了
+packet.getLength(); // 获取数据长度
+```
+
+* 整体例子
+
+```java
+public class UDPTest1 {
+    @Test
+    public void send(){
+        DatagramSocket ds = null;
+        DatagramPacket dp = null;
+        try {
+            ds = new DatagramSocket();
+
+            String str = "UAEFaefajefklasejfkaesf";
+            dp = new DatagramPacket(str.getBytes(),0,str.length(),
+                    InetAddress.getLocalHost(),12345);
+
+            ds.send(dp);
+        } catch (SocketException e) {
+            e.printStackTrace();
+        } catch (UnknownHostException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally{
+            if (ds != null) {
+                ds.close();
+
+            }
+        }
+
+    }
+    @Test
+    public void receive(){
+        DatagramSocket socket = null;
+        try {
+            socket = new DatagramSocket(12345);
+            byte[] buffer = new byte[100];
+            DatagramPacket dp = new DatagramPacket(buffer,buffer.length);
+            socket.receive(dp);
+            System.out.println(new String(buffer));
+            System.out.println(new String(dp.getData()));
+        } catch (SocketException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+### 6. URL编程
+
+#### 6.1 是什么
+
+__URL(Uniform Resource Locator)__: 统一资源定位符,表示Internet某一资源的地址
+
+URL通常由5各部分组成:
+
+```java
+<传输协议>://<主机名>:<端口号>/<文件名>#片段名?参数列表
+//参数列表格式: 参数名=参数值&参数名=参数值
+```
+
+#### 6.2 使用
+
+用URL类使用url
+
+```java
+//创建
+URL url = new URL("http://localhost:8080/examples/hello.txt");
+```
+
+```java
+//方法
+public String getProtocol();//获取协议名
+public String getHost();  //获取主机名
+public String getPort(); //获取端口号 
+public String getPath(); //获取文件路径
+public String getFile(); //获取文件名
+public String getQuery(); //获取查询名
+```
+
+
+
+#### 6.3 获取资源
+
+```java
+HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();//从url获取连接
+urlConnection.connect();//连接上
+InputStream is = urlConnection.getInputStream();//获取输入流
+```
+
+```java
+//关闭资源
+is.close();
+urlConnection.disconnect();//断开连接
+```
+
+## 十二. 反射
+
+### 1. 绪论
+
+==Reflection==是被视为__动态语言__(运行时结构可变)的关键,允许程序在执行期间借助Reflection API获得任何类的内部信息,并能直接操作任意对象的内部属性和方法.
+
+加载完类以后,在堆内存的方法去中就产生了一个Class类型的对象,包含了类的结构信息,可以通过这个对象看到类的结构.
+
+* 功能:
+  * 运行时判断对象所属的类
+  * 构造一个类的对象
+  * 判断任意一个类具有的成员变量和方法
+  * 获取泛型信息
+  * 调用任意一个对象的成员变量和方法
+  * 处理注解
+  * 生成动态代理
+
+### 2. 先看个示例(热闹)
+
+```java
+@Test
+public void test2() throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException, NoSuchFieldException {
+    Class clazz = Person.class;
+    Constructor cons = clazz.getConstructor(String.class, int.class);
+
+    Object tom = cons.newInstance("Tom", 12); //构造器实例化对象
+    System.out.println(tom);
+
+    //用反射调用属性,方法
+    Field age = clazz.getDeclaredField("age");
+    age.set(tom,10);//设置属性
+    Method show = clazz.getDeclaredMethod("show");//获取方法
+    show.invoke(tom);//调用
+
+
+}
+```
+
+* 调用私有结构:
+
+  ```java
+  Constructor cons1 = clazz.getDeclaredConstructor(String.class);
+  cons1.setAccessible(true);//设置为accessible
+  Object obj = cons1.newInstance("Tom");
+  ```
+
+### 3. 反射和封装性
+
+1. new对象和反射建对象,我选哪个?
+
+根据反射的动态性,确定要那个对象就new,不能确定就反射
+
+2. 反射和封装性矛盾吗
+
+   不矛盾.封装性只是提出不要调用的建议,对于实在想调用的人是拦不住的.
+
+### 4. Class类
+
+**类的加载过程:** 程序经过javac命令以后,会生成一个或多个字节码文件(.class).接着使用java命令对字节码文件解释运行. java命令的过程是类加载过程.
+
+加载到内存中的类称为**运行时类**,此运行时类作为Class的一个实例
+
+Class不止对应于类,还可以对应于 <u>接口,内部类,数组,枚举类,注解,基本数据类型,void,Class类本身</u>
+
+> 只要数组的元素类型,和维度一样,就共享一个Class实例
+
+#### 4.1 获取Class实例的四种方式
+
+```java
+//方式1:调用运行时类的属性class
+Class<Person> clazz1 = Person.class;//它有泛型,指明操作哪个类
+System.out.println(clazz1);//class com.at.Ref.Person
+```
+
+```java
+//方式2:通过运行时类的对象
+Person p1 = new Person();
+Class<? extends Person> clazz2 = p1.getClass();//在Object类中
+System.out.println(clazz2);
+```
+
+```java
+//方式3: 调用Class的静态方法forName(String classPath)
+Class<?> clazz3 = Class.forName("com.at.Ref.Person");//从src下开始写包名
+//会抛异常
+System.out.println(clazz3);
+System.out.println(clazz1 == clazz2);//true
+//加载到内存中的运行时类,会缓存一定时间,在此时间之内,可以通过托尼盖方式获取此运行时类
+```
+
+```java
+//方式4:使用类的加载器: Classloader,作为了解
+ClassLoader classLoader = RefTest.class.getClassLoader();//RefTest是当前类
+Class<?> aClass = classLoader.loadClass("com.at.Ref.Person");
+```
+
+#### 4.2 创建运行时类的对象
+
+```java
+Object o = clazz.newInstance(); //古老用法,可强转,有泛型自动转
+//调用空参构造器,要是没有就抛异常,并且访问权限要够
+```
+
+调用空参的比较多,因为不确定构造器长啥样
+
+想调用构造器可
+
+```java
+Constructor cons = clazz.getConstructor(String.class, int.class);
+Object tom = cons.newInstance("Tom", 12); //构造器实例化对象
+```
+#### 4.3 获取运行时类的完整结构
+
+* __获取属性__:
+
+  * 获取所有属性
+
+    ```java
+    Field[] fields = clazz.getFields();
+    ```
+
+    只可以获得__public__的自身属性和父类属性(包括静态)
+
+  * 获取所有属性(真)
+
+    ```java
+    Field[] declaredFields = clazz.getDeclaredFields();
+    ```
+
+    里面有<u>仅属于本类</u>的__任意权限属性__(包括静态)
+
+* __属性Field类获取信息__
+
+  * ```java
+    int num = df.getModifiers(); //获取权限修饰
+    //对应的数字存在java.lang.reflect.Modifier类中
+    //public : 1
+    //private: 2
+    //protected :4
+    //default : 0
+    //static : 8
+    //注意:会相加
+    ```
+
+  * ```java
+    Class c = df.getType();//获取属性类型,返回Class
+    ```
+
+  * ```java
+    String name = df.getName(); //获取变量名
+    ```
+
+* __获取方法__:
+
+  ```java
+  Method[] methods = pc.getMethods();//获取当前类及父类的pulic方法,包括static
+  Method[] declaredMethods = pc.getDeclaredMethods(); //获取当前运行时类声明的所有方法
+  ```
+
+* __获取方法的内部结构(Method)__
+
+  ```java
+  Annotation[] aa = dm.getAnnotations();//获取注解并遍历
+  for (Annotation annotation : aa) {
+      System.out.println(annotation);
+  }
+  
+  int num = dm.getModifiers();//和属性一样
+  Class rc = dm.getReturnType();//获取返回值类型
+  String name = dm.getName();//获取方法名
+  Class [] rcc = dm.getParameterTypes();//获取形参类型们,如果返回null,或者返回的length为0,则没有参数
+  //早期版本没法获得形参名
+  Class [] rccc = dm.getExceptionTypes();
+  ```
+
+* __获取构造器__
+
+  ```java
+  Constructor [] con = pc.getConstructors();//获取当前类public构造器
+  Constructor [] con = pc.getDeclaredConstructors();//获取当前类所有构造器
+  ```
+
+  
+
+### 5. ClassLoader
+
+调用Class实例的`getClassLoader()`方法可以获得类的__系统加载器__,系统加载器调用`getParent()`获取__拓展类加载器__,获取不到拓展类加载器的父亲__引导类加载器(C++编写)__
+
+引导类加载器加载核心类库,无法加载自定义类
+
+* __使用ClassLoader__加载配置文件
+
+```java
+ClassLoader cl = RefTest.class.getClassLoader();
+InputStream is = cl.getResourceAsStream("jdbc1.properties");//当前目录为src
+pros.load(is);
+
+String user = pros.getProperty("user");
+String passwd = pros.getProperty("password");
+System.out.println(user + passwd);
+//跟文件流的效果区别不大
+```
