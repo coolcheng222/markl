@@ -4761,6 +4761,28 @@ Object tom = cons.newInstance("Tom", 12); //构造器实例化对象
   Constructor [] con = pc.getDeclaredConstructors();//获取当前类所有构造器
   ```
 
+* __获取父类和父类泛型__
+
+  ```java
+  Class<Person> personClass = Person.class;//获取父类
+   Type genericSuperclass = personClass.getGenericSuperclass();//获取带泛型的父类
+  //Type是Class实现的接口
+  
+  ParameterizedType genericSuperclass1 = (ParameterizedType) genericSuperclass;
+          Type[] actualTypeArguments = genericSuperclass1.getActualTypeArguments();
+          for (Type actualTypeArgument : actualTypeArguments) {//获取类的泛型,看看就好
+              System.out.println(actualTypeArgument);
+          }
+  ```
+
+* __获取实现的接口__,包,注解
+
+  ```java
+  Class [] int = pc.getInterfaces();//获取接口
+  Package pac = pc.getPackage();//获取包
+  Annotation[] a = pc.getAnnotations();//获取注解
+  ```
+
   
 
 ### 5. ClassLoader
@@ -4780,4 +4802,462 @@ String user = pros.getProperty("user");
 String passwd = pros.getProperty("password");
 System.out.println(user + passwd);
 //跟文件流的效果区别不大
+```
+
+### 6. 调用运行时类的结构
+
+#### 6.1 指定属性
+
+```java
+Class clazz = Person.class;
+Person p = (Person)clazz.newInstance();
+
+//获取属性field
+Field name = clazz.getField("name");//指定属性名,会抛异常,只能指定public和父类,通常不用这个
+Field age = clazz.getDeclaredField("age");//指定所有运行时类声明的属性
+
+name.set(p,"aaa");//参数1指明哪个对象的属性,第二个指定值\
+Object o = name.get(p);//获取属性,如果没有权限不能set或get
+System.out.println(o);
+
+age.setAccessible(true);//保证私有属性可访问
+age.set(p,1);//设置值
+
+如果是静态,就把p换成null或者Person.class好了
+    
+```
+
+#### 6.2 指定方法
+
+```java
+Class<Person> personClass = Person.class;
+Person p = new Person();
+
+Method setAge = personClass.getMethod("setAge", int.class);
+Method getAge = personClass.getMethod("getAge");
+
+setAge.setAccessible(true);
+//第一个参数为方法名,后面都是形参列表的类型class
+setAge.invoke(p, 1);//invoke调用,传入调用对象和参数,
+System.out.println(getAge.invoke(p));//invoke的返回值就是返回值
+```
+
+```java
+//对于静态方法
+Method getAge = personClass.getMethod("getAge");
+Object o = getAge.invoke(Person.class);//传一个意思意思,传任意对象包括null都能正常调用
+```
+
+#### 6.3 指定构造器
+
+```java
+Constructor con = clazz.getDeclaredConstructor(参数列表);
+Person p = (Person)con.newInstance(参数);
+```
+
+### 7. 动态代理
+
+就是根据被代理类动态的构造代理类
+
+#### 7.1 先看静态代理
+
+实现同一个接口,然后由代理类调用被代理类方法
+
+```java
+interface ClothFactory{
+    public void produceCloth();
+}
+class ProxyClothFactory implements ClothFactory{
+//代理类
+    private ClothFactory factory;
+
+    public ProxyClothFactory(ClothFactory factory){
+        this.factory = factory;
+    }
+
+    @Override
+    public void produceCloth() {
+        System.out.println("preparing");
+        factory.produceCloth();
+        System.out.println("shouwei");
+    }
+}
+class NikeClothFactory implements ClothFactory{
+    @Override
+    public void produceCloth() {
+        System.out.println("Nikde");
+    }
+    //被代理类
+
+}
+public class ProxyTest {
+    public static void main(String[] args) {
+        NikeClothFactory nike = new NikeClothFactory();
+
+        ProxyClothFactory proxyClothFactory = new ProxyClothFactory(nike);
+        proxyClothFactory.produceCloth();
+    }
+}
+```
+
+#### 7.2 动态代理
+
+* 如何根据加载到内存的被代理类,动态创建一个代理类对象?
+* 当通过代理类对象调用方法时,如何动态的调用被代理类的同名方法
+
+```java
+interface Human{
+    String getBelief();
+    void eat(String food);
+}
+
+//被代理类
+class SuperMan implements Human{
+
+    @Override
+    public String getBelief() {
+        return "I am null";
+    }
+
+    @Override
+    public void eat(String food) {
+        System.out.println("I am eating " + food);
+    }
+}
+/*
+
+ */
+class ProxyFactory{
+
+    /**
+     *
+     * @param obj 被代理类对象
+     * @return 代理类对象
+     */
+    public static Object getProxyInstance(Object obj){
+        MyInvocationHandler mm = new MyInvocationHandler();
+        mm.bind(obj);
+
+       return Proxy.newProxyInstance(obj.getClass().getClassLoader(),obj.getClass().getInterfaces(),mm);
+
+    }
+}
+class MyInvocationHandler implements InvocationHandler{
+    private Object obj;
+    public void bind(Object obj){
+        this.obj = obj;//设置被代理类对象
+    }
+
+    //当我们用代理类对象调用方法a时就会自动调用如下方法
+    @Override
+    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+        //所以这里就是写你要代理的方法的功能
+        System.out.println("吃");
+        return method.invoke(obj,args);
+    }
+}
+
+public class DProxyTest {
+    public static void main(String[] args) {
+        SuperMan superMan = new SuperMan();
+        //代理类对象
+        Human hm = (Human)ProxyFactory.getProxyInstance(superMan);
+
+        hm.eat("efef");
+    }
+}
+
+```
+
+# JAVA8
+
+## 一. Lambda表达式
+
+### 1. 示例
+
+```java
+@Test
+public void test1(){
+    Runnable r1 = new Runnable() {
+        @Override
+        public void run() {
+            System.out.println("haha");
+        }
+    };
+    r1.run();
+
+    //Lambda
+    Runnable r2 = ()-> System.out.println("wo");
+    r2.run();
+}
+```
+
+* 以上为示例
+
+### 2. 语法
+
+本质: Lambda表达式是一个对象而不是函数(跟python不同)
+
+针对只有一个抽象方法的接口(函数式接口)
+
+`->` 称为Lambda操作符 或者 箭头操作符
+
+* 其左边称为__Lambda的形参列表__(就是接口中的抽象方法的参数列表)
+* 其右边称为__Lambda体__(就是重写的抽象方法的方法体)
+
+```java
+Comparator<Integer> com2 = (o1,o2) -> Integer.compare(o1,o2);
+```
+
+
+
+* 使用分为六种情况
+
+  > 1. 无参无返回值
+  >
+  >    ```java
+  >        Runnable r2 = ()-> System.out.println("wo");
+  >    ```
+  >
+  > 2. 单参无返回值
+  >
+  >    ```java
+  >    Comsumer<String> con = (String s) -> System.out.println("haha");
+  >    //重载了void accept(T)方法
+  >    ```
+  >
+  > 3. 可以根据"类型推断"省略数据类型
+  >
+  >    ```java
+  >    Comsumer<String> con = (s) -> System.out.println("haha");
+  >    ```
+  >
+  > 4. 参数只有一个,小括号可以省略
+  >
+  >    ```java
+  >    Comsumer<String> con = s -> System.out.println("haha");
+  >    ```
+  >
+  > 5. 两个以上参数,多条语句,有返回值
+  >
+  >    ```java
+  >    Comparator<Integer> com2 = (o1,o2)->{
+  >        System.out.println(o1);
+  >        System.out.println(o2);
+  >        return o1.compareTo(o2);
+  >    };
+  >    ```
+  >
+  > 6. 只有一条语句,可以省略大括号和return
+
+## 二. 函数式接口
+
+### 1. 概念
+
+一个接口中只声明了一个抽象方法,称为__函数式接口__(Functional Interface)
+
+可以用Lambda表达式实例函数式接口对象,这也是Lambda表达式的本质
+
+函数式接口一般有`@FunctionalInterface`注解
+
+这是Java在面向函数编程的努力(OOF)
+
+### 2. 内置函数式接口
+
+四大核心函数式接口
+
+| 函数式接口                       | 参数类型 | 返回类型 | 用途                                                         |
+| -------------------------------- | -------- | -------- | ------------------------------------------------------------ |
+| __Consumer<T\>__<br />消费型接口 | T        | void     | 对类型为T的对象应用操作,包含方法accept(T)                    |
+| __Supplier<T\>__<br />供给型接口 | 无       | T        | 返回一个T类型对象,包含 T get();                              |
+| __Function<T,R>__<br/>函数型接口 | T        | R        | 对类型为T的对象应用操作并返回结果.结果是R类型的对象,包含方法: R apply(T) |
+| __Predicate<T\>__<br/>断定型接口 | T        | boolean  | 确定T是否满足某约束,boolean test(T)                          |
+
+### 3. 方法引用
+
+当要传给Lambda体的操作已经有实现的方法了,可以用__方法引用__,也就是说,方法引用本质就是Lambda表达式.
+
+#### 3.1. 使用格式 
+
+> 1. 对象::非静态方法
+> 2. 类::静态方法
+> 3. 类::非静态方法
+
+如所选方法参数都是泛型,且个数和Lambda参数数量匹配,则可以用方法引用,参数默认为Lambda参数(抽象方法参数);
+
+总之要求__抽象方法形参列表和返回值与引用的方法形参列表和返回值一致__
+
+在第三种情况下要求第一个参数和类型匹配,然后参数列表可以少一个
+
+#### 3.2 构造器引用
+
+考虑重写的方法只会返回一个new的对象
+
+```java
+Supplier <Employee> sup1 = () -> new Employee();
+//构造器引用
+Supplier <Employee> sup2 = () -> Employee new;
+```
+
+形参和构造器形参匹配,返回值要求是对应类的对象
+
+对数组也可以用,叫__数组引用__
+
+```java
+Function<Integer,String[]>  func2 = String[]::new;
+```
+
+
+
+## 三. Stream API
+
+把函数式编程风格引入Java,使用StreamAPI可以对集合进行操作,类似于SQL执行的数据库查询.
+
+Collection是静态的数据结构,Stream是有关计算的,面向CPU.这样的可以处理**NoSql**
+
+Stream是数据渠道,用于操作数据源所生成的元素序列.
+
+注意: 
+
+* Stream自己不会存储元素
+* Stream不会改变源对象,而是返回有新结果的Stream
+* Stream操作延迟执行,这意味着他们会等到需要结果的时候才执行
+
+### 1. 操作
+
+> 1. 创建Stream
+> 2. 中间操作
+> 3. 终止操作,之后不会被使用(在这个时候才执行中间操作链)
+
+#### 1.1 创建
+
+方式一: 通过集合
+
+```java
+//使用集合接口中的默认方法
+deafult Stream<E> stream();//返回一个顺序流
+default Stream<E> parallelStream();//返回一个并行流
+```
+
+方式二: 通过数组
+
+```java
+//调用Arrays工具类的方法
+Arrays.stream(T [] array);
+//如果是自定义类型,返回Stream<T>
+//对应基本类型有惊喜:
+//int[] : IntStream
+//long[] : LongStream
+//double[] : DoubleStream
+```
+
+方式三: Stream的of()静态方法
+
+```java
+
+Stream.of(T...values);
+//可变参,也可以放数组
+```
+
+方式四: 创建无限流
+
+```java
+//迭代,静态Stream方法
+public static<T> Stream<T> iterate(final T seed,final UnaryOperator<T> f);
+//UnartOperator继承于Function<T,T>,意思就是让你传Lambda表达式
+
+//遍历10个偶数,看看就好
+Stream.iterate(0, t -> t + 2).limit(10).forEach(System.out::println);
+```
+
+```java
+//生成
+public static<T> Stream<T> generate(Supplier<T> s);
+Stream.generate(Math::random).limit(10).forEach(System.out::println);
+    
+```
+
+#### 1.2 中间操作
+
+不会改变原Stream,都是返回Stream
+
+forEach这种是终止操作,一旦执行就会把Stream关闭,需要重新生成
+
+* __筛选与切片__
+
+`
+
+| 方法                | 作用                                                  |
+| ------------------- | ----------------------------------------------------- |
+| filter(Predicate p) | 过滤不满足的元素(你看,又是Lambda)(类似于mysql的where) |
+| limit(int n)        | 截断流,元素不超过给定数量(类似limit)                  |
+| skip(int n)         | 跳过前面n个元素,或者一个空流                          |
+| distinct()          | 筛选,通过流生成元素的hashCode()和equals()筛掉重复元素 |
+
+* __映射__
+
+  | 方法                | 作用                                                         |
+  | ------------------- | ------------------------------------------------------------ |
+  | map(Function f)     | 把每个元素经过function映射并返回                             |
+  | flatMap(Function f) | 接收一个函数作为参数,将流中每个值换成另一个流,把所有流连成一个流<br>不是存流的流,单纯把流的内容全部拼接了 |
+  |                     |                                                              |
+
+* __排序__
+
+  | 方法                   | 使用                    |
+  | ---------------------- | ----------------------- |
+  | sorted()               | 产生一个新流,用自然排序 |
+  | sorted(Comparator com) | 用定制排序              |
+  |                        |                         |
+
+#### 1.3 终止操作
+
+* __匹配与查找__
+
+  | 方法                            | 作用(终止)             |
+  | ------------------------------- | ---------------------- |
+  | boolean allMatch(Predicate p)   | 检查是否匹配所有元素   |
+  | boolean noneMatch(Predicate p)  | 检查是否没有匹配的元素 |
+  | boolean anyMatch(Predicate p)   | 检查any满足            |
+  | Optinoal <T> findFirst()        | 返回第一个元素         |
+  | Optional<T> findAny()           | 返回流中任意元素       |
+  | long count()                    | 返回元素个数           |
+  | Optional<T> max(Comparator com) | 返回最大               |
+  | Optional<T> min(Comparator com) | 返回最小               |
+  | forEach(Consumer c)             | 内部迭代               |
+
+* __归约__
+
+  | 方法                                    |                                    |
+  | --------------------------------------- | ---------------------------------- |
+  | reduce(T identity,BinaryOperator)       | 把流中元素结合起来,得到一个值,返回 |
+  | BinaryOperator                          | 传入两个,返回一个(都同类型)        |
+  | identity                                | 初始值                             |
+  | 作用:把初始值和流中元素每个一个一个操作 |                                    |
+  | reduce(BinaryOperator)                  | 不通过identity直接做               |
+
+* __收集__:
+
+  * collect(Collector c)
+  * Collectors工具类提供了静态方法,返回一个Collector
+    * toList()
+    * toSet()
+    * toCollection()
+
+## 四. Optinoal类
+
+Optional<T>主要是针对空指针异常诞生的容器类,可以保存T的值,或者保存null表示他不存在.
+
+对T的操作都能看成对Optional的操作
+
+### 1.操作
+
+#### 1.1 创建
+
+```java
+Optional.of(T t);//创建一个Optional实例,t非空
+Optional.empty();//创建一个空的
+Optional.ofNullable(T t); // 创建一个t可以为null的Optional
+
+o.orElse(T) ;//如果调用主体不为empty则返回,不然返回传入的参数
 ```

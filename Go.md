@@ -718,3 +718,13 @@ fmt.Println(slice)
 
 * string和slice底层指向的是同一个数组
 * 想要改变string,需要强制转换[]byte(切片)或[]rune,再传回string
+
+## 十. map
+
+```go
+var 变量名 map[keytype]valuetype
+//声明完后需要make分配内存
+	var haha map[int64]string = make(map[int64]string,10)
+	haha[1]="ererer"
+```
+
