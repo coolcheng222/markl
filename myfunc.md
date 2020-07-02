@@ -922,7 +922,17 @@ return 变量;
 
 
 
+## 补充. 创建用户
 
+```sql
+create user tom identified by '123456'
+```
+
+### 1. 给权限
+
+```sql
+grant select,insert,update,delete on 库.表 to 用户名@host;
+```
 
 
 

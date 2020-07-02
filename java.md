@@ -4769,10 +4769,10 @@ Object tom = cons.newInstance("Tom", 12); //构造器实例化对象
   //Type是Class实现的接口
   
   ParameterizedType genericSuperclass1 = (ParameterizedType) genericSuperclass;
-          Type[] actualTypeArguments = genericSuperclass1.getActualTypeArguments();
-          for (Type actualTypeArgument : actualTypeArguments) {//获取类的泛型,看看就好
-              System.out.println(actualTypeArgument);
-          }
+  Type[] actualTypeArguments = genericSuperclass1.getActualTypeArguments();
+  for (Type actualTypeArgument : actualTypeArguments) {//获取类的泛型,看看就好
+      System.out.println(actualTypeArgument);
+  }
   ```
 
 * __获取实现的接口__,包,注解
@@ -4785,7 +4785,7 @@ Object tom = cons.newInstance("Tom", 12); //构造器实例化对象
 
   
 
-### 5. ClassLoader
+### 5. ClassLoader(包含加载配置文件)
 
 调用Class实例的`getClassLoader()`方法可以获得类的__系统加载器__,系统加载器调用`getParent()`获取__拓展类加载器__,获取不到拓展类加载器的父亲__引导类加载器(C++编写)__
 
