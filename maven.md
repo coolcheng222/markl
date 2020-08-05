@@ -1,3 +1,5 @@
+
+
 # maven
 
 > [TOC]
@@ -83,6 +85,8 @@ mvn compile #编译主程序
 mvn test-compile #编译测试程序
 mvn test # 执行测试
 mvn package #打包1
+mvn install #安装
+mvn site # 生成站点
 
 ```
 
@@ -159,3 +163,138 @@ mvn install
     * test: 对主程序无效,对测试程序有效
     * provided: 不参与打包
   * compile会一只照顾开发部署运行到tomcat,但provided在部署时就舍弃,由servlet提供
+
+## 七. 生命周期
+
+生命周期就是各个构建环节的执行顺序
+
+maven的核心程序中定义了抽象的生命周期,生命周期的各个阶段具体任务由插件完成
+
+* Maven有3个相互独立生命周期
+  * clean lifecycle: 清理
+    * pre-clean
+    * clean
+    * post-clean
+  * default lifecycle: 核心部分,编译,测试,打包,安装,部署等
+    * 
+  * site lifecycle: 生成报告,站点,发布站点
+    * pre-site
+    * site
+    * post-site
+    * site-deploy
+
+* 生命周期特点:
+  * 无论要执行生命周期中的那个阶段,都会从整个生命周期最初的位置执行##
+
+### 2. 插件和目标
+
+* 声明周期的各个阶段仅仅定义了要执行的是什么
+* 各个阶段和插件的目标是对应的
+* 相似的目标由特定插件完成
+* 可以将目标看做"调用插件功能的命令"
+
+| 生命周期阶段 | 插件目标    | 插件                  |
+| ------------ | ----------- | --------------------- |
+| compile      | compile     | maven-compiler-plugin |
+| test-compile | testCompile | maven-compiler-plugin |
+|              |             |                       |
+
+## 八 .依赖(plus)
+
+### 1. 传递性
+
+compile的依赖会传递到依赖你的工程里.
+
+### 2. 原则
+
+解决jar冲突问题
+
+* 情况1: 我项目依赖了一个log4j版本,依赖的项目传递了另一个log4j版本
+  * 解决: **就近原则**,传递性上越近的就选择
+* 情况2:在依赖路径长度相同时,有版本冲突抉择
+  * 解决:__先声明者优先(dependency的顺序在前)__
+
+### 3. 统一管理依赖的版本号
+
+Spring依赖的jar包都是4.0.0,想要统一升级为4.1.1,怎么办
+
+* 建议:
+
+  * 使用properties标签内统一声明版本号
+
+  * 然后使用变量
+
+    ```xml
+    <properties>
+        <com.at.spring>4.1.1</com.at.spring>
+    </properties>
+    
+    <dependencies>
+        <dependency>
+            <groupId></groupId>
+            <artifactId></artifactId>
+            <version>${com.at.spring}</version>
+                     <!--相当于用一个变量统一制定版本号-->
+        </dependency>
+    </dependencies>
+    ```
+
+    
+
+## 九. 继承
+
+### 1. 举例
+
+不能传递的依赖有junit4.0,4.9,4.12 会对团队协同开发造成问题
+
+思路: 将junit依赖版本统一提取到父工程中,在子工程声明junit依赖时不指定版本.以父工程统一设定为准
+
+配置继承后要先安装父工程
+
+* 操作步骤
+
+  * 创建一个maven工程做个父工程,打包方式pom
+
+  * 子工程中声明对父工程引用
+
+    ```xml
+    <parent>
+        <groupId>父工程</groupId>
+        <artifictId>父工程</artifictId>
+        <version>父工程版本</version>
+        <relativePath>父工程pom.xml相对路径</relativePath>
+    </parent>
+    ```
+
+    
+
+  * 将子工程坐标中与父工程重复的内容删除
+
+  * 在父工程中管理junit依赖
+
+    ```xml
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+            	<!--...-->
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+    ```
+
+    
+
+  * 删除子工程中的版本号
+
+## 十. 聚合(一键安装)
+
+在一个总的聚合工程中配置各个参与模块
+
+```>
+<modules>
+	<module>子工程路径</moudule>
+	<module>子工程路径</moudule>
+	<module>子工程路径</moudule>
+</modules>
+```
+

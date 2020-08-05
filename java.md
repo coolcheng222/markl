@@ -2380,7 +2380,7 @@ public final class String
         System.out.println(s3 == s6);//false
         System.out.println(s3 == s7);//false
         System.out.println(s5 == s6);//false
-		System.out.println(s3 == s8);//false
+		System.out.println(s3 == s8);//true
 ```
 
 * 若拼接的是两个常量,则结果<u>返回的变量</u>指向常量池
@@ -3201,6 +3201,7 @@ add的时候加在链表最后
   * 先hash
   * 若hashCode遇到占用,则链式存储
   * 7.0是用新元素放在数组中,而原元素被链出去;8.0则新元素加载链表后面
+  * 添加在底层`HashMap`的key中,value设置为常量PRESENT
 * LinkedHashSet元素本质:
   
 * 可以**有序遍历,**因为**每个元素有前驱后继指针**
@@ -3954,7 +3955,7 @@ public void test3(){
 
 ### 7. 缓冲流(字符)
 
-显然跟字节一样,我们来说不同
+显然跟字节用法一样,我们来说不同
 
 > 可以用String接收读入的东西,使用`readline()`方法,到末尾返回null,不读换行符
 >
@@ -4052,7 +4053,7 @@ InputStreamReader isr2 = new InputStreamReader(InputStream in,CharSet cs);
 
 * 不会抛出IOException异常
 * 有自动flush功能
-* PrintStream打印的字符都被转换为该平台字符编码下的字节,如果需要打印字符建议PrinWriter
+* PrintStream打印的字符都被转换为该平台字符编码下的字节,如果需要打印字符建议PrintWriter
 * System.out是PrintStream的实例
 * 构造器传入文件可以用print往文件写东西
 
@@ -5261,3 +5262,4 @@ Optional.ofNullable(T t); // 创建一个t可以为null的Optional
 
 o.orElse(T) ;//如果调用主体不为empty则返回,不然返回传入的参数
 ```
+

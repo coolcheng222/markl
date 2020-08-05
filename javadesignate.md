@@ -1,3 +1,5 @@
+
+
 # 设计模式/七大原则
 
 > [TOC]
@@ -347,7 +349,7 @@ A指向B
 
 也具有导航性和多重性
 
-一般B类是作为属性出现,A指向B
+一般B类是作为属性出现,B指向A
 
 一般使用setter设置B属性,表现可分离的特点
 
@@ -378,6 +380,8 @@ A指向B
 `Singleton`
 
 采取一定方法保证在整个软件系统中,对某个类**只能存在一个对象实例**,并且该类只提供一个获取其对象实例的方法
+
+使用场景: 频繁创建和销毁的对象,创建时耗资源过多还常用的重量级对象, 工具类对象,访问次数过多的数据库或者文件对象
 
 单例模式有__八种方式__:
 
@@ -497,3 +501,487 @@ class Singleton4{
 
 * 优点: 懒加载,线程安全
 * 缺点: 效率太低,每个线程get的时候都不能同步执行
+
+### 5. 同步代码块懒汉式(不能用)
+
+> 在线程不安全的基础上,把null的判断执行语句加上同步代码块
+>
+> <span style="color:red">注意!这是错误示范,这个本身不能解决线程安全问题</span>
+
+```java\
+class Singleton5{
+    private Singleton5(){
+
+    }
+
+    private static Singleton5 instance;
+
+    public Singleton5 getInstance(){
+        if(instance == null){
+            synchronized(Singleton5.class) {
+                instance = new Singleton5();
+            }
+        }
+        return instance;
+    }
+}
+```
+
+### 6. 双重检查(推荐)
+
+>私有化构造器
+>
+>把属性设置为volatile,保证程序有序性
+>
+>在方法中声明双重if检查
+>
+>
+
+```java
+class Singleton6{
+    private Singleton6(){
+
+    }
+
+    private static volatile Singleton6 instance;//volatile: 让修改立即更新到主存
+
+    public Singleton6 getInstance(){
+        if(instance == null){ // 只有为null的时候需要
+            synchronized(Singleton6.class) {
+                if(instance == null)//进同步代码块再判断一次
+                    instance = new Singleton6();
+            }
+        }
+        return instance;
+    }
+}
+```
+
+优点: 线程安全
+
+### 7. 静态内部类(推荐)
+
+* 静态内部类的特点:
+  * 在类加载时不会被加载
+  * 在使用时加载,并且加载自带线程安全
+
+> 私有化构造器
+>
+> 声明静态内部类并在内部类中声明Instance静态属性
+>
+> 提供获取内部类属性的静态方法.
+
+```java
+
+class Singleton7{
+    private Singleton7(){
+
+    }
+
+    private static class SingletonInstance{
+        public static Singleton7 Instance = new Singleton7();
+    }
+
+
+    public Singleton7 getInstance(){
+        return  SingletonInstance.Instance;
+    }
+}
+```
+
+### 8. 枚举
+
+```java
+enum Singleton8{
+    INSTANCE;// Singleton8.INSTANCE就行了
+}
+```
+
+## 三. 工厂模式
+
+"为开闭原则而生" ----我自己
+
+在大量创建某种,某类,或者某批对象时就会用工厂模式
+
+### 1. 简单/静态工厂模式
+
+简单工厂模式是工厂模式的一种.很显然是最简单的一种
+
+* 思想: 由一个工厂对象决定创建出哪一种产品的实例
+* 定义: 定义了一个**创建对象的类,**由这个类来封装**实例化对象的行为.**
+  * 在其他类中仅使用工厂制造指定对象
+  * 一个工厂类包揽所有实例化是简单工厂
+
+```java
+
+//创建工厂类,里面用if-else来判断创建的对象
+ public Pizza createPizza(String type){//提供对象
+        Pizza pizza = null;
+        System.out.println("简单工厂制造中");
+
+        char[] chs = type.toLowerCase().toCharArray();
+        if(chs[0] <= 'z' && chs[0] >= 'a'){
+            chs[0] = (char) (chs[0] - 32);
+        }
+
+        try {
+            Class clazz = Class.forName("com.at.factory." + new String(chs) + "Pizza");
+            pizza = (Pizza) clazz.newInstance();
+        } catch (ClassNotFoundException e) {
+            System.out.println("pizza not found");
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        } catch (InstantiationException e) {
+            e.printStackTrace();
+        }
+        return pizza;
+    }
+```
+
+* 对工厂的使用
+
+  ```java
+      SimpleFactory sf;
+  
+      public OrderSimple(SimpleFactory sf){ //只要一个工厂
+          this.sf = sf;
+          String type;
+          Pizza pizza= null;
+          do{
+              type = getType();
+              pizza = sf.createPizza(type);//使用工厂创造对象
+              if(pizza == null){
+                  break;
+              }
+              System.out.println(pizza.getPizzaName());
+          }while(pizza != null);
+      }
+  
+      public String getType(){
+          Scanner scanner = new Scanner(System.in);
+          return scanner.next();
+      }
+  ```
+
+### 2. 工厂方法模式
+
+* 思想: 在前面基础上__把实例化功能抽象成抽象方法__,在不同子类中实现,一个种类对应一个子类
+* 简单地说,实现一个接口/抽象类,但是让实现类决定提供哪些种类的实例
+* 
+* UML示例: ORder系列的都是工厂类,最下面是抽象类配抽象方法
+
+![factory](pics/javadesignate/factory.jpg)
+
+### 3. 抽象工厂模式
+
+* 思想: 定义了一个interface用于创建相关或有依赖关系的__对象簇__,无需指明具体的类.
+  * 是对简单工厂模式的改进
+  * 抽象工厂分为两层: `AbsFactory`和`具体实现的工厂子类`
+  * 工厂成为工厂簇,方便管理和拓展
+* __个人理解__: 
+  * 这个接口是所有工厂的__基石__,在创建简单工厂类时都要以抽象接口为模板
+  * 和工厂方法不一样的是,派生的工厂可以任选产品族,但工厂方法只能选一族祖先产品
+
+![ABSFactory](pics/javadesignate/ABSFactory.jpg)
+
+## 四. 原型模式
+
+`prototype`
+
+* 思想: 原型实例指定创建对象的种类,并通过拷贝这些原型创建新的对象
+* 允许一个对象创建另一个可定制对象
+* 原理: 通过将一个**原型对象传给那个要发动创建的对象,**这个要发动创建的对象请求**原型对象拷贝他们自己**来实施创建.即Object.clone()方法
+* 缺点: 对于已经写好的类,违反了ocp原则(一定要实现接口)
+
+### 1. clone浅拷贝
+
+让需要拷贝的原型类实现**Cloneable接口**,然后用clone()就可以拷贝
+
+```java
+class Sheep implements Cloneable{
+    @Override
+    protected Object clone() throws CloneNotSupportedException {
+        Sheep sheep = null;
+        sheep = (Sheep)super.clone();
+        return sheep;
+    }
+}
+```
+
+### 2. 深拷贝1: 重写clone
+
+显然上面是浅拷贝,如果属性有对象,那就多个对象共享一个属性了
+
+在clone调用引用的克隆,需要克隆的类实现Cloneable,并且不能出现死循环
+
+### 3. 深拷贝: 序列化
+
+自己写个方法,要求被拷贝类实现`Serializable`
+
+```java
+public Object deepClone(){
+    ByteArrayOutputStream bos = null;
+    ObjectOutputStream oos = null;
+    ByteArrayInputStream bis = null;
+    ObjectInputStream oos = null;
+    
+    try{
+        //序列化
+    	bos = new ByteArrayOutputStream();
+    	oos = new  ObjectOutputStream (bos);
+        oos.writeObject(this);
+        
+        //反序列化
+    	bis =  new ByteArrayInputStream(bos.toByteArray()) ;
+    	oos = new ObjectInputStream(bis);
+        DeepPrototype dep = (DeepPrototype) ois.readObject();
+        
+        
+    }catch(Exception e){
+        
+    }
+
+}
+```
+
+## 五. 建造者模式
+
+`Builder\生成器`
+
+* 思想: 将复杂对象的**建造过程**抽象出来,不和产品本身耦合,这个抽象的建造过程的实现可以构造出不同的对象
+* __四个角色__:
+  * Product产品对象
+  * Builder抽象建造者: 接口/抽象类
+  * ConcreteBuilder具体建造者: 实现接口,构建和装配部件
+  * Director指挥者: 构建一个使用Builder接口的对象; 隔绝了客户和对象的生产过程,控制负责产品对象的生产过程
+  * <img src="pics/javadesignate/Main-1594471007719.jpg" alt="Main" style="zoom:50%;" />
+
+
+
+## 六. 适配器模式
+
+`Adapter`
+
+* 思想: 将某个类的接口转换成客户端期望的另一个接口表示,主要目的是兼容性.也可以叫包装器-__Wrapper__
+
+* 用户调用适配器的接口方法,适配器再调用被适配方法,用户看不到里面,耦合度低
+
+### 1. 类适配器
+
+![image-20200713192708114](pics/javadesignate/image-20200713192708114.png)
+
+### 2. 对象适配器
+
+继承并不符合语义,我们要把适配器的实现方式修改一下
+
+* **Adapter**不再继承被适配类,而是**持有被适配的实例**'
+* 只需实现适配类的接口,就能建立起适配转换
+* 符合合成复用原则
+
+![image-20200715200938787](pics/javadesignate/image-20200715200938787.png)
+
+客户持有适配器和220V,把220V赋给适配器,调用接口方法就能获得5V类
+
+### 3. 接口适配器
+
+当不需要实现接口(src)全部方法时可以先实现个**抽象类(适配器)**实现部分方法(其他假装实现/空方法),然后用子类完善(dst)
+
+## 七. 桥接模式
+
+`Bridge`
+
+防止太多相同的类蹦出导致类爆炸
+
+* 思想: 将实现与抽象放在__不同层次中__,使得两个层次可以独立改变
+* 结构型设计模式,基于类的最小设计原则.能保持各个部分的独立性以及他们的功能拓展
+
+![image-20200716201154991](pics/javadesignate/image-20200716201154991.png)
+
+### 1. 类图说明
+
+`Abstraction`: 桥接类,维护了Implementor,即实现类
+
+`RefinedAbstraction`: 抽象类的子类
+
+`Implementer`: 行为实现类的接口
+
+`Concrete...`: 行为的具体实现类
+
+左面是抽象,右面是具体,用聚合桥接在一起
+
+### 2. 手机问题类图
+
+![image-20200716201940390](pics/javadesignate/image-20200716201940390.png)
+
+品牌是一个实现,手机样式是一个抽象,分离,不会导致样式品牌相互牵制类爆炸
+
+品牌在phone构造时实现,具体方法是子类通过调用phone,phone调用brand的实现方法来完成
+
+```java
+super.open();//FoldedPhone.open
+
+Brand.open();//Phone.open
+```
+
+## 八. 装饰者模式
+
+`Decorator`
+
+问题: 
+
+​	咖啡有很多种
+
+​	调料有很多种
+
+在点咖啡时,可以选择加(0/1/多)调料. 在咖啡类中应当提供一个能计算咖啡和调料总费用的方法
+
+你把组合全都放出来就类__爆炸__了
+
+### 1. 装饰者模式
+
+* 思想: __动态的__将新功能附加到对象上. 它比继承更有弹性,体现了开闭原则
+
+<img src="pics/javadesignate/image-20200720195926414.png" alt="image-20200720195926414" style="zoom:50%;" /><
+
+Decorator拥有Component属性,解决一切烦恼.
+
+### 2. 咖啡问题解决:
+
+定义Drink类对应Component,Coffee对应ConcreteComponent,Decorator不变
+
+我们继承Coffee获得种类,继承Decorator获得调味品
+
+当我们希望向Coffee加牛奶时,就把它变成Milk的属性,我们给他命名为MCoff
+
+再想加别的东西,就可以往别的调料的属性传自己.最后获得的就是多层套娃的coffee
+
+然后用递归就可以把各个调料和咖啡的价格算出来
+
+### 3. 装饰者模式在IO的应用
+
+希望你没忘记,所谓__处理流(FilterInputStream子类)__,一定是包裹在__节点流(文件流)__外面的,这种包裹就是装饰者(套娃)模式.所以处理流也可以包着处理流.
+
+## 九. 组合模式
+
+`Composite`也叫部分整体模式
+
+### 1. 概述
+
+* 创建对象组的__树形结构__,把组合用树形表示"整体-部分"关系.
+* 组合模式依据树形来组合独享,表示部分以及整体层次
+* 其使得用户对单个对象和组合对象的访问具有一致性
+  * 即: 组合能让客户以一致的方式处理单个和组合对象
+
+解决的问题是__树形结构__关系
+
+### 2. 构建:
+
+创建一个接口/抽象类`Component`,**它是所有节点的实现接口/抽象类**,规定了一些共有的操作
+
+然后定义叶子`Leaf`
+
+和`Composite`非叶子节点,实现了子部件相关(管理)操作,可以管理自己的子节点
+
+![image-20200724202855037](pics/javadesignate/image-20200724202855037.png)
+
+### 3. 实例: 校-院-系 表
+
+我们要用Java实现一个校-院-系 体系
+
+#### 3.1 uml
+
+<img src="pics/javadesignate/image-20200725200826231.png" alt="image-20200725200826231" style="zoom:33%;" />
+
+## 十. 外观模式
+
+`Fecade`,也叫过程模式
+
+### 1.引例:
+
+你看我们家庭影院有好多设备,每个设备有一个遥控器,拿了一堆遥控器,手里感觉很烦.
+
+### 2. 思想
+
+我们需要一个高层接口,__聚合__子系统接口,给子系统中的一组接口提供一个__一致的界面__,用来访问子系统中的一群接口.
+
+也就是说定义一个一致的接口,用以屏蔽内部子系统的细节,使调用段之和这个接口发生调用,无需探明内部细节,就是__外观模式__
+
+### 3. 思想UML
+
+![image-20200728204602295](pics/javadesignate/image-20200728204602295.png)
+
+**外观类: facade为**调用端提供统一的调用接口. 知道哪些子系统负责处理请求,从而将调用端的请求代理给适当的子系统对象
+
+Client: 外观接口的调用者
+
+子系统集合: 指模块或者子系统,处理Facade对象指派的任务
+
+### 4. 用例UML
+
+![image-20200728205308512](pics/javadesignate/image-20200728205308512.png)
+
+就是用户发出简单指令,由facade完成开开关关各种任务
+
+# 设计模式(中)
+
+## 一. 享元模式
+
+`Flyweight`蝇亮模式
+
+### 1. 引例:
+
+小型外包项目,给客户A做一个产品展示网站,别的客户也想要这样的网站:
+
+​	有客户要求以新闻形式发布
+
+​	有客户要求以博客形式发布
+
+​	有客户希望以公众号形式发布
+
+### 2. 思路:
+
+不一定需要都搞一个网站,整合到一个网站之中,共享其相关的数据和代码,减少服务器资源
+
+* 享元模式
+  * 运用共享技术邮箱的支持大量细粒度对象
+  * 比如<u>数据库连接池,String常量池</u>
+  * 能解决__重复对象的内存浪费问题__,系统中有大量相似对象可以从缓冲池里拿,提高效率
+
+### 3. 思路UML
+
+![image-20200729194428780](pics/javadesignate/image-20200729194428780.png)
+
+* Flyweight是抽象享元角色,它是产品的抽象类,同时<u>定义出对象的外部状态和内部状态</u> 的接口或实现
+* ConcreteFlyweight是具体的享元角色,是具体产品类,实现抽象角色定义的相关业务
+* UnsharedConcreteFlyweight不可共享,一般不会出现在享元工厂中
+* FlyweightFactory享元工厂,用于构造一个池容器(集合),同时提供从池中获取对象的方法
+
+> **外部状态**: 值对象得以依赖的一个标记,<u>随环境而改变,</u><u>不可共享</u>
+>
+> **内部状态**: 指对象共享出来的信息,存储在享元对象内部且<u>不会随环境的改变而改变</u>
+
+## 二. 代理模式
+
+`Proxy`
+
+### 1. 思想
+
+* 代理模式: 为对象提供一个__替身__,控制对这个对象的访问. 即通过代理对象访问目标对象:
+* 好处: 可以在目标对象实现的基础上增强额外的功能操作,扩展目标对象的功能
+* 被代理的可以是: 远程对象,创建开销大的对象,或者是需要安全控制的对象
+* 分类: __静态代理,动态代理(JDK代理,接口代理),Cglib代理(可以在内存中动态的创建对象,不需要实现接口,属于动态代理)__
+
+### 2. 思想类图
+
+![image-20200803213005333](pics/javadesignate/image-20200803213005333.png)
+
+### 3. 静态代理
+
+静态代理在使用时需要定义接口或者父类, 目标对象与代理对象一起实现相同的接口或者是继承相同的父类
+
+* 代理对象与目标对象要实现__相同的接口__,然后通过调用和目标对象相同的对象来调用目标对象额方法
+
+![image-20200803213949576](pics/javadesignate/image-20200803213949576.png)
+
+* 优点: 不需要修改目标对象,可以拓展
+* 缺点; 需要和目标对象实现一样的接口,会有很多代理类一旦接口增加方法,代理和目标都得维护

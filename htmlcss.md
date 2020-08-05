@@ -241,6 +241,24 @@ meta标签可以设置字符集,还可以设置网页关键字,指定网页描�
 
 5秒后跳转百度,认识一下代码就好
 
+
+
+### 8. 音视频元素
+
+`audio`:audio的属性大多不需要赋值
+
+```html
+<audio src="./source/ww.mp3" controls autoplay loop></audio>
+<!--
+	controls: 由用户控制
+	autoplay: 自动播放,不太支持
+	loop: 单曲循环
+	ie8不支持,可以在标签内用<source src="">指定,并且并列写者请换浏览器
+-->
+```
+
+`vedio`用来视频
+
 ## 三. xHtml语法规范/内联框架
 
 1. html不区分大小写,一般使用小写
@@ -483,9 +501,245 @@ __内联元素(行内元素)__,只占自身大小的元素,不会占用一行,�
 <article>文章</article>
 ```
 
+## 七. 表格
+
+表格用于表示一些格式化的数据
+
+### 1. table标签+tr+td
+
+* table : 表格
+* tr: 一行
+* td: 一行中的一列
+  * 叠起来写就是多行多列
+  * 设置border="1"显示边框,但这本应是css做的
+
+```html
+<table border="1">
+        <tr>
+            <td>oo</td><td>oo</td><td>oo</td>
+        </tr>
+        <tr>
+            <td>oo</td><td>oo</td><td>oo</td>
+        </tr>
+        <tr>
+            <td>oo</td><td>oo</td><td>oo</td>
+        </tr>
+    </table>
+```
+
+<table border="1">
+        <tr>
+            <td>oo</td><td>oo</td><td>oo</td>
+        </tr>
+        <tr>
+            <td>oo</td><td>oo</td><td>oo</td>
+        </tr>
+        <tr>
+            <td>oo</td><td colspan="2">oo</td><td>oo</td>
+        </tr>
+    </table>
+
+### 2. 合并单元格
+
+在`td`中设置`colspan`属性表示横向合并几个格子
+
+在`td`中设置`rowspan`属性表示纵向合并几个格子
+
+### 3. 表头th
+
+使用th标签标示表头的内容,用法和td一样,会有默认效果
+
+### 4. 长表格
+
+元组很多的表格叫长表格,可分成三部分看: 表头,表格主题,底部(比如合计)
+
+html提供了三个标签对应这三个部分`thead`,`tbody`,`tfoot`来区分表格不同部分,应该成为table的子标签
+
+tr写在这些标签当中.
+
+> 注意: tbody是必然存在的,没写tbody默认会把所有不在头尾的tr放进tbody
+
+* 好处:
+  * 可以单独设置样式
+  * 可以每次打印都打出头和尾
+  * 对三者的顺序不要求,比如甚至可以把foot写到第一个,不影响他显示在表格尾
+
+### 5. 古代用法: 布局
+
+现在用div+css布局了
+
+## 八. 表单
+
+表单是用来__提交信息给服务器__的
+
+### 1. 创建表单
+
+* 写__form标签__并指定`action`属性,提交表单时会提交到action对应地址(跳转到)
+
+```html
+<form action="target.html">
+
+</form>
+```
+
+* 使用表单项__input自结束标签__:
+
+  * 如果希望表单项数据提交到服务器,必须给input指定name属性
+  * 给submit按钮设置value属性,指定上面的字
+  * 给input指定value属性,指定默认值
+
+  ```html
+  <form action="target.html">
+          用户名: <input type="text" name="user" />
+      	密码: <input type="password" name="password"/>
+          <input type="submit" value="你好"/>
+      </form>
+  ```
+
+  <form action="target.html" style="border:yellow 1px solid">
+          用户名: <input type="text" /><br/>
+      密码: <input type="password" name="password"/>
+          <input type="submit" value="你好"/>
+      </form>
+
+* 点击提交,所输入信息会出现在url的**查询字符串**中,<small>target.html?user=ohhh</small>
+
+### 2. 表单项
+
+表单项类型用`type属性`区分
+
+#### 2.1 表单项表格
+
+记得把表单项写在form里
+
+| 属性值                                     | 含义                    |
+| ------------------------------------------ | ----------------------- |
+| radio                                      | 单选框                  |
+| checkbox                                   | 多选框                  |
+| 下拉表: 非input系列; 多行文本框<textarea\> |                         |
+| reset                                      | 重置,把form里的全都掀了 |
+| button                                     | 按钮,跟js一起用         |
+| <button></button>标签                      | 按钮                    |
+|                                            |                         |
+|                                            |                         |
+|                                            |                         |
+
+#### 2.2 单选/多选详解
+
+<u>不需要填写的表单项值默认为on,需要用value影响</u>
+
+radio为单选,需要相同的name属性才能指定为多项单选,值为value属性值
+
+```html
+性别:<input type="radio" name="gender" value="M"/>男
+        <input type="radio" name="gender" value="F"/>女
+```
+
+<form action="target.html" style="border: red 1px solid">
+        性别:<input type="radio" name="gender" value="M"/>男
+        <input type="radio" name="gender" value="F"/>女
+        <input type="submit" value="aaa"/>
+    </form>
+
+checkbox为多选,跟单选一样,最后值以多个键值对体现在url中
+
+#### 2.3 下拉表
+
+使用`<select>`创建下拉表,用`<option>`指定选项
+
+```html
+<select name="star" id="">
+            <option value="bing">fanbingbing</option>
+            <option value="ben">ben</option>
+            <option value="ru">ru</option>
+ </select>
+```
+
+<select name="star" id="">
+            <option value="bing">fanbingbing</option>
+            <option value="ben">ben</option>
+            <option value="ru">ru</option>
+ </select>
+
+* 可以用optgroup对option们分组,并制定label标签指定组名
+
+  ```html
+  <select name="star" id="">
+              <optgroup label="F">
+                  <option value="bing">fanbingbing</option>
+              </optgroup>
+              <optgroup label="M">
+                  <option value="ben">ben</option>
+                  <option value="ru">ru</option>
+              </optgroup>
+  
+          </select>
+  ```
+
+  
+
+#### 2.4 默认选中选项
+
+单选/多选中 可以在希望选中的选项中添加属性`checked="checked"`表示默认选择
+
+下拉框中 可以用`selected="selected"`在option中,或者`multiple="multiple"`在select中,表示多选下拉列表
+
+##### 2.5 多行文本域
+
+```html
+<textarea name = "aaaa"></textarea>
+```
+
+<textarea></textarea>
+
+#### 2.6 按钮button标签
+
+比input的系列更灵活,不是自结束
+
+```html
+        <button type="submit">熬</button> <!--提交-->
+        <button type="reset">锕</button>  <!--重置-->
+        <button type="button">阿</button> <!--无用-->
+```
+
+#### 2.7 label标签
+
+可以把表单标签在label里,专门css,也可以在里面加for属性值为表单项id,把两者关联
+
+```html
+<label for="um">用户名</label>
+<input id="um" type="text" name="username" />
+```
+
+#### 2.8 fieldset
+
+在表单里用fieldset来为表单分组,
+
+```html
+<fieldset>
+    <legend>我是组名</legend>
+    <input type="text" value="a"/>
+</fieldset>
+```
 
 
-# CSS
+
+## 九. 框架集
+
+也是用来引入其他外部页面的,和内联框架一样
+
+frameset不能和body放在一个页面中.
+
+```html
+<frameset rows(cols)="50%,50%"><!--页面一行(列)一行(列)的出现,占50%-->
+	<frame src="01.html" />
+    <frame src="02.html" />
+</frameset>
+```
+
+
+
+# CSS(上)
 
 ## 一. 绪论
 
@@ -953,6 +1207,8 @@ span~p{
   * 和百分比类似,相对当前元素**字体大小**计算
   * ==1em \=\= 1font-size==
   * 设置字体相关样式会使用
+* `rem`
+  * 相对于root(html)字体大小
 
 ### 2. 颜色单位
 
@@ -1333,7 +1589,7 @@ CSS中不能直接设置行间距,可以通过设置`行高line-height`来间接
 | inline       | 为内联元素                             |
 | inline-block | 行内块元素,可以用块元素宽高,不独占一行 |
 | none         | 此元素不会被显示                       |
-|              |                                        |
+| table        | 类似<table>效果                        |
 
 ```css
 a{
@@ -1664,8 +1920,514 @@ __文档流__就是网页的最底层,表示的是页面得位置,我们创建�
 
 
 
+## 附: 开班信息练习
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+
+        }
+
+        .box1{
+            width: 100px;
+            height: 100px;
+            background-color: red;
+        }
+        body{
+            font: 12px/1 宋体;
+        }
+        .outer{
+            width:300px;
+            /*height: 473px;*/
+            margin: 20px auto;
+        }
+        .header{
+            /*width: 300px;*/
+            /*如果设置宽度,内边距会往外边挤,不指定会往内部挤*/
+            height: 38px;
+
+            /*margin: 50px auto 0;*/
+            background-color: rgb(241, 241, 241);
+
+            border-top: 2px rgb(5, 157, 131) solid;
+            line-height: 38px;
+
+            padding: 0 22px 0 16px;
+        }
+        ul{
+            list-style:none;
+            border-bottom: 1px #E4E3E0 dashed;
+        }
+        li{
+            margin-bottom: 14px;
+        }
+        .content{
+        /*width: 298px;*/
+
+            /*height: 400px;*/
+        /*margin:0 auto;*/
+
+            border: 1px rgb(228, 228, 224) solid;
+            padding:0 28px 0 20px;
+
+        }
+        .content h3{
+            margin-top:14px;
+            margin-bottom: 16px;
+        }
+        .content a{
+            text-decoration:none;
+            color: black;
+            font-size:12;
+        }
+        .content .red{
+            color:red;
+            font-weight: bold;
+        }
+        .content .right{
+            float:right;
+        }
+        .content .noborder{
+            border: none;
+        }
+        .header h3{
+            font-family: 微软雅黑,serif;
+            font-weight:bold;
+        }
+        .header a{
+            float:right;
+            color:red;
+
+            font-weight:bold;
+        }
+        .content a:hover{
+            text-decoration: underline;
+            color:blue;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="outer">
+    <div class="header">
+        <a href="#">16年面授开班计划</a>
+        <h3>近期开班</h3>
+    </div>
+    <div class="content">
+        <h3><a href="#">javaee+云计算-全程就业班</a></h3>
+        <ul>
+            <li>
+                <a href="#" class="right"><span class="red">预约报名</span></a>
+                <a href="#">开班时间: <span class="red">2016-04-27<span></a>
+            </li>
+            <li>
+                <a href="#" class="right"><span class="red">预约报名</span></a>
+                <a href="#">开班时间: <span class="red">2016-04-27<span></a>
+            </li>
+            <li>
+                <a href="#" class="right"><span>开班盛况</span></a>
+                <a href="#">开班时间: <span>2016-04-27</span></a>
+            </li>
+        </ul>
+        <h3><a href="#">h5全称就业班</a></h3>
+        <ul>
+            <li>
+                <a href="#" class="right"><span class="red">预约报名</span></a>
+                <a href="#">开班时间: <span class="red">2016-04-27<span></a>
+            </li>
+            <li>
+                <a href="#" class="right"><span class="red">预约报名</span></a>
+                <a href="#">开班时间: <span class="red">2016-04-27<span></a>
+            </li>
+            <li>
+                <a href="#" class="right"><span>开班盛况</span></a>
+                <a href="#">开班时间: <span>2016-04-27</span></a>
+            </li>
+        </ul>
+        <h3><a href="#">Android+人工智能全称就和版</a></h3>
+        <ul class="noborder">
+            <li>
+                <a href="#" class="right"><span class="red">预约报名</span></a>
+                <a href="#">开班时间: <span class="red">2016-04-27<span></a>
+            </li>
+            <li>
+                <a href="#" class="right"><span class="red">预约报名</span></a>
+                <a href="#">开班时间: <span class="red">2016-04-27<span></a>
+            </li>
+            <li>
+                <a href="#" class="right"><span>开班盛况</span></a>
+                <a href="#">开班时间: <span>2016-04-27</span></a>
+            </li>
+        </ul>
+
+    </div>
+    </div>
+</body>
+</html>
+```
 
 
 
+## 七. 定位
+
+定位指的就是把指定元素摆放到任意位置
+
+通过`position`样式来改变定位类型
+
+__相对定位不会脱离文档流,绝对脱离会__
+
+* 特性:
+
+  * 不继承
+
+* 值:
+
+  * `static`: 默认值,不开启定位
+  * `relative`: 开启相对定位
+  * `absolute`: 开始绝对定位
+  * `fixed`: 开启固定定位(绝对定位)
+
+  只要position不是static,就可以通过`left(左侧偏移量)`,`right`,`top`,`bottom`设置元素的相对/绝对偏移量
+
+### 1. 相对定位
+
+* 使用: 指定定位类型,并设置偏移量
+
+  * 
+
+    ```css
+    position: relative;
+    left:100px;
+    bottom : 100px;
+    ```
+
+  * 相对: relative相对原来位置的定位
+
+  * 通常只需要定位两个(水平垂直)就能完成定位了
+
+* 相对定位的特点:
+
+  * 不脱离文档流
+  * 会使元素提升一个层级
+
+### 2. 绝对定位
+
+* 特性:
+  * 开启绝对定位会脱离文档流
+  * 如果不设置偏移量,位置不会改变
+  * 相对于__离它最近的开启了定位的祖先元素定位__
+  * 一般都会给父元素设置相对定位
+  * 定位使元素提升层级
+
+### 3. 固定定位fixed
+
+* 特点:
+  * 脱离文档流
+  * 相对于__窗口__的绝对定位
+  * 会固定在浏览器位置,不会随着滚动条滚动
+
+### 4. 元素层级
+
+如果定位元素层级一样,结构上在下的盖住结构上在上的.
+
+但是可以用`z-index`样式设置层级
+
+* 值: 正整数,越大越优先显示,默认0
+* __只能对开启定位的元素使用__
+* 父元素不可能盖住子元素
+
+### 5. opacity样式
+
+通过`opacity`样式设置透明度,值为0-1之间的值,0最透明
+
+对IE8以下没用
+
+# CSS(下)
+
+## 一. 背景
+
+### 1. 相关样式
+
+> background-image
+>
+> background-color
+>
+> background-repeat
+>
+> background-position
+>
+> background-attachment
+>
+> background
+
+* 设置背景图像:
+
+  * 使用`background-image`样式,值为url
+
+    ```css
+    background-image: url(img/aaa.jpg);
+    ```
+
+    
+
+  * 如果图片大于元素,默认从左上角开始显示
+
+  * 如果图片小于元素,图片会循环显示充满元素
+
+    * 使用`background-repeat`设置是否重复显示
+      * `repeat(默认)`,`no-repeat(不重复)`
+      * `repeat-x`沿横向重复
+      * `repeat-y`沿纵向重复
+
+  * 背景颜色一定在图片后面,可以作为png背景的底色
+
+### 2. 想给图像定位
+
+`background-position`:给图像定位
+
+* 值:
+
+  * 默认值: `0% 0%`
+
+  * 可选值1: top right left bottom center选两组合
+
+    ```css
+    background-position:top left;
+    
+    background-position:bottom right;
+    ```
+
+  * 可选值2: 百分数
+
+    * 根据父元素的百分比指定两个值,第一个水平偏移量,第二个竖直偏移量
+
+  * 可选值3: 像素
+
+    * 根据父元素相对左上角,第一个水平,第二个竖直
+
+`background-attachment`:设置背景图片是否和页面一起滚动
+
+* 值:
+  * scorll: 默认,跟着滚动
+  * fixed: 不随着滚动,会使定位相对于浏览器窗口
+
+### 3. 简写背景样式
+
+显然我们五个样式太多了,我们用`background`
+
+```css
+/*background-color: #bfa;*/
+/*background-image: url("img/active.png");*/
+/*background-position: center center;*/
+/*background-repeat: no-repeat;*/
+/*background-attachment: fixed;*/
+  background: #bfa url("img/active.png") center center no-repeat fixed;
+```
+
+* 没有顺序要求,样式可以不全写(用默认值)
+
+## 二. 用超链接冒充按钮(超链接图片)
+
+### 1. 初登场
+
+平时用普通图,hover时换一张背景,点击时换一张背景
+
+但是图片会加载,会造成不好的用户体验
+
+```html
+ #btn{
+            width:93px;
+            height: 29px;
+            display:block;
+            background-repeat: no-repeat;
+            background-image:url("img/link.png");
+        }
+        #btn:hover{
+            width:93px;
+            height: 29px;
+            display:block;
+            background-repeat: no-repeat;
+            background-image:url("img/hover.png");
+        }
+        #btn:active{
+            width:93px;
+            height: 29px;
+            display:block;
+            background-repeat: no-repeat;
+            background-image:url("img/active.png");
+        }
+```
+
+### 2. 改进(图片整合/CSS-sprite)
+
+修改图片,把三张图放进同一张图片,并在不同行为时移动背景图片
+
+```css
+#btn{
+            width:93px;
+            height: 29px;
+            display:block;
+            background-repeat: no-repeat;
+            background-image:url("img/btn.png");
+        }
+        #btn:hover{
+            width:93px;
+            height: 29px;
+            display:block;
+            background-repeat: no-repeat;
+            background-image:url("img/btn.png");
+
+            background-position: center;
+        }
+        #btn:active{
+            width:93px;
+            height: 29px;
+            display:block;
+            background-repeat: no-repeat;
+            background-image:url("img/btn.png");
+            background-position: right;
+        }
+```
 
 
+
+### 附. CSS-sprite
+
+<img src="pics/htmlcss/amazon-sprite_.png" alt="amazon-sprite_" style="zoom:33%;" />
+
+这是一张亚马逊的雪碧图,如何用之?
+
+用ps量,然后靠background-position偏移.
+
+
+
+## 三. 表格的样式
+
+[联动html表格元素](#七. 表格)
+
+### 1. 基本样式/边框
+
+table属于__块元素__,可以设置内容区的width和height,可以设置margin,border,padding
+
+td也可以设置边框,就像这样![image-20200709133016009](pics/htmlcss/image-20200709133016009.png)
+
+* table和td边框有个默认距离,在样式中叫`border-spacing`,可以在table的样式中设置为0
+  * 对表格的所有边框有效
+* 然后设置table样式`border-collapse`值为`collapse`
+  * 好像只有border-spacing为0才有效
+  * 对整个表格的边框都会合并
+
+### 2. 花式表格背景
+
+```css
+tr:nth-child(odd){
+    background-color: red;
+}
+tr:hover{
+    background-color: #E4E3E0;
+}
+```
+
+### 3. 用table影响相邻重叠外边距
+
+使用table可以取消父子元素的相邻,使外边距不重叠(div做不到)
+
+```css
+div class="box1">
+        <table></table>
+        <div class="box2"></div>
+    </div>
+```
+
+但是实际用法:使用before+display:table
+
+```css
+.box2:before{
+	content:"";
+    display:table;/*类似<table>的效果*/
+}
+```
+
+## 附. clearfix(BFC)最终写法
+
+综合上述说法,我们可以把高度塌陷问题和外边距重叠问题综合解决
+
+```css
+.clearfix:after,.clearfix:before{
+    content: "";
+    display: table;
+    clear: both;
+}
+```
+
+## 四. hack
+
+某些代码只需要在某些特殊的浏览器中执行,可以用`CSS Hack`执行
+
+指的是一段特殊的代码只能在某些浏览器上识别
+
+### 1. 条件hack
+
+```html
+<!--[IF IE 6]>
+<p>原理ie</p>
+<![endif]-->
+
+<!--[IF gt/lt/lte/gte IE 6]>
+<p>原理ie</p>
+<![endif]-->
+```
+
+### 2. 属性hack
+
+css样式指定浏览器
+
+```css
+//样式前加符号避免
+_: ie6及以下
+*: ie7及以下
+//样式后加符号
+\9: ie6以上
+\0: ie8及以上
+```
+
+# H5/CSS3补充
+
+## 一. 图标字体
+
+`iconfont`
+
+在网页中会使用一些小型的图标,可以通过图片来引入,但是图片太大,不灵活
+
+### 1. 前置知识
+
+CSS中使用`@font-face`引入字体文件并给字体命名,就可以在网页中用了
+
+```css
+@font-face{
+	font-family: "名字";
+    src: 字体路径;
+}
+```
+
+### 2. 使用下载的图标字体
+
+先把css和webfonts黏贴到目录下,必须在同一目录下
+
+将all.css引入网页
+
+* 使用:
+  * 用类名使用图标字体(类名固定,文档去查)
+
+```html
+<span class="fas fa-bell"></span>
+```
+
+![image-20200730140217103](pics/htmlcss/image-20200730140217103.png)

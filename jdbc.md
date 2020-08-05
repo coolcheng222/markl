@@ -765,7 +765,7 @@ Connection connection = cpds.getConnection();
 销毁整个连接池
 
 ```java
-DataSources.destroy(cbps);
+DataSource.destroy(cbps);
 ```
 
 #### 2.1 配置文件获取连接
@@ -811,5 +811,173 @@ java连接数据库操作
 ```java
 ComboPooledDataSource cpds = new ComboPooledDataSource("intergalactoApp");//这个参数对应xml中<named-config name="intergalactoApp">的名字
 cpds.getConnection();
+```
+
+### 3 DBCP
+
+导入jar包,dbcp和pool
+
+* 实例化DataSource接口
+
+  ```java
+  BasicDataSource source = new BasicDataSource();
+  ```
+
+* 查看index文档
+
+* 设置基本信息
+
+  ```java
+  //不推荐
+  source.setUsername("root");
+  source.setUrl("jdbc:mysql://localhost:3306/test1?useUnicode=true&characterEncoding=utf8&rewriteBatchedStatements=true&serverTimezone=UTC");
+  source.setPassword("123456");
+  source.setDriverClassName("com.mysql.cj.jdbc.Driver");
+  ```
+
+* 设置数据库管理属性
+
+* ```java
+  source.setInitialSize(10);
+  		source.setMaxActive(10);
+  ```
+
+* ```txt
+  dbcp连接池常用基本配置属性
+  
+  1.initialSize ：连接池启动时创建的初始化连接数量（默认值为0）
+  
+  2.maxActive ：连接池中可同时连接的最大的连接数（默认值为8，调整为20，高峰单机器在20并发左右，自己根据应用场景定）
+  
+  3.maxIdle：连接池中最大的空闲的连接数，超过的空闲连接将被释放，如果设置为负数表示不限制（默认为8个，maxIdle不能设置太小，因为假如在高负载的情况下，连接的打开时间比关闭的时间快，会引起连接池中idle的个数 上升超过maxIdle，而造成频繁的连接销毁和创建，类似于jvm参数中的Xmx设置)
+  
+  4.minIdle：连接池中最小的空闲的连接数，低于这个数量会被创建新的连接（默认为0，调整为5，该参数越接近maxIdle，性能越好，因为连接的创建和销毁，都是需要消耗资源的；但是不能太大，因为在机器很空闲的时候，也会创建低于minidle个数的连接，类似于jvm参数中的Xmn设置）
+  
+  5.maxWait  ：最大等待时间，当没有可用连接时，连接池等待连接释放的最大时间，超过该时间限制会抛出异常，如果设置-1表示无限等待（默认为无限，调整为60000ms，避免因线程池不够用，而导致请求被无限制挂起）
+  
+  6.poolPreparedStatements：开启池的prepared（默认是false，未调整，经过测试，开启后的性能没有关闭的好。）
+  
+  7.maxOpenPreparedStatements：开启池的prepared 后的同时最大连接数（默认无限制，同上，未配置）
+  
+  8.minEvictableIdleTimeMillis  ：连接池中连接，在时间段内一直空闲， 被逐出连接池的时间
+  
+  9.removeAbandonedTimeout  ：超过时间限制，回收没有用(废弃)的连接（默认为 300秒，调整为180）
+  
+  10.removeAbandoned  ：超过removeAbandonedTimeout时间后，是否进 行没用连接（废弃）的回收（默认为false，调整为true)
+  ```
+
+#### 3.1 使用配置文件输入基本信息
+
+使用`BasicDataSourceFactory`工厂类
+
+```java
+static DataSource createDataProperties(Properties properties);
+//传入一个properties,返回一个配好的实例
+```
+
+```properties
+# 配置文件内容
+driverClassName=com.mysql.cj.jdbc.Driver
+url=jdbc:mysql://localhost:3306/test1?useUnicode=true&characterEncoding=utf8&rewriteBatchedStatements=true&serverTimezone=UTC
+username=root
+password=123456
+
+initialSize=10
+```
+
+### 4. Druid(推荐)
+
+Druid是阿里巴巴开源平台上一个数据库连接池实现，它结合了C3P0、DBCP、Proxool等DB池的优点，同时加入了日志监控，可以很好的监控DB池连接和SQL的执行情况，可以说是针对监控而生的DB连接池，**可以说是目前最好的连接池之一。**
+
+```java
+package com.atguigu.druid;
+
+import java.sql.Connection;
+import java.util.Properties;
+
+import javax.sql.DataSource;
+
+import com.alibaba.druid.pool.DruidDataSourceFactory;
+
+public class TestDruid {
+	public static void main(String[] args) throws Exception {
+		Properties pro = new Properties();		 	pro.load(TestDruid.class.getClassLoader().getResourceAsStream("druid.properties"));
+		DataSource ds = DruidDataSourceFactory.createDataSource(pro);
+        //和dbcp一样
+		Connection conn = ds.getConnection();
+		System.out.println(conn);
+	}
+}
+
+```
+
+其中，src下的配置文件为：【druid.properties】
+
+```java
+url=jdbc:mysql://localhost:3306/test?rewriteBatchedStatements=true
+username=root
+password=123456
+driverClassName=com.mysql.jdbc.Driver
+
+initialSize=10
+maxActive=20
+maxWait=1000
+filters=wall
+```
+
+- 详细配置参数：
+
+| **配置**        | **缺省** | **说明**                                                     |
+| --------------- | -------- | ------------------------------------------------------------ |
+| name            |          | 配置这个属性的意义在于，如果存在多个数据源，监控的时候可以通过名字来区分开来。   如果没有配置，将会生成一个名字，格式是：”DataSource-” +   System.identityHashCode(this) |
+| url             |          | 连接数据库的url，不同数据库不一样。例如：mysql :   jdbc:mysql://10.20.153.104:3306/druid2      oracle :   jdbc:oracle:thin:@10.20.149.85:1521:ocnauto |
+| username        |          | 连接数据库的用户名                                           |
+| password        |          | 连接数据库的密码。如果你不希望密码直接写在配置文件中，可以使用ConfigFilter。详细看这里：<https://github.com/alibaba/druid/wiki/%E4%BD%BF%E7%94%A8ConfigFilter> |
+| driverClassName |          | 根据url自动识别   这一项可配可不配，如果不配置druid会根据url自动识别dbType，然后选择相应的driverClassName(建议配置下) |
+| initialSize     | 0        | 初始化时建立物理连接的个数。初始化发生在显示调用init方法，或者第一次getConnection时 |
+| maxActive       | 8        | 最大连接池数量                                               |
+| maxIdle         | 8        | 已经不再使用，配置了也没效果                                 |
+| minIdle         |          | 最小连接池数量                                               |
+
+## 九. DBUtils
+
+commons-dbutils是Apache组织提供的一个开源JDBC工具类库,封装了针对于数据库的增删改查操作
+
+以`QueryRunner类为例`使用dbutils
+
+```java
+ QueryRunner runner = new QueryRunner();
+ Connection conn = JDBCUtils.getConnection();
+ String sql  ="insert into customers (name,email,birth) values (?,?,?)"
+ runner.update(conn,sql,"蔡徐坤","caixukun@","1999-12-01");
+
+//记得关connection
+```
+* 查询
+  * 查询时需要用到**ResultSetHandler<T>**的实现类
+
+```java
+//查询时需要用到ResultSetHandler<T>的实现类
+QueryRunner runner = new QueryRunner();
+  Connection conn = JDBCUtils.getConnection();
+  String sql = "select * from customers where id = ?";
+  
+BeanHandler<Customer> handler = new BeanHandler<>(Customer.class);
+BeanListHandler<Customer> hand2 = new BeanListHandler<>(Customer.class);
+ScalarHandler handler3 = new ScalarHandler();//获取一个特殊值
+
+  Customer cust = runner.query(conn,sql,handler,23);
+List<Customer> ll = runner.query(conn,sql,hand2,23);
+Lont l = (Long) runner.query(conn,sql,handler3);//会返回object ,可以强转
+```
+
+* 关闭资源
+* 使用DBUtils工具类实现
+
+```java
+DBUtils.closeQuietly(conn);
+DBUtils.closeQuietly(ps);
+DBUtils.closeQuietly(rs);
+//不用处理异常的关闭
 ```
 
