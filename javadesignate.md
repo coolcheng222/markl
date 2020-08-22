@@ -924,7 +924,7 @@ Client: 外观接口的调用者
 
 # 设计模式(中)
 
-## 一. 享元模式
+## 十一. 享元模式
 
 `Flyweight`蝇亮模式
 
@@ -960,7 +960,7 @@ Client: 外观接口的调用者
 >
 > **内部状态**: 指对象共享出来的信息,存储在享元对象内部且<u>不会随环境的改变而改变</u>
 
-## 二. 代理模式
+## 十二. 代理模式
 
 `Proxy`
 
@@ -985,3 +985,245 @@ Client: 外观接口的调用者
 
 * 优点: 不需要修改目标对象,可以拓展
 * 缺点; 需要和目标对象实现一样的接口,会有很多代理类一旦接口增加方法,代理和目标都得维护
+
+### 4. 动态代理
+
+1. 代理对象不需要实现接口,目标对象依然需要实现接口
+2. 代理对象的生成利用到了JDK的API反射机制,动态的在内存中构建代理对象
+3. 也可以叫JDK代理,接口代理
+
+* 核心方法: `java.lang.reflect.Proxy newProxyInstance(参数)`
+  * 传入的对象就是目标对象
+  * 利用反射机制返回一个代理对象
+  * 通过代理对象调用目标方法
+  * 
+  * 参数有三个,下面细说
+
+![image-20200805212159389](pics/javadesignate/image-20200805212159389.png)
+
+* ProxyFactory详解:
+  * 它有一个属性target存目标对象
+  * 它的构造器传入目标对象
+  * 它的getProxyInstance没有参数,调用Proxy.newProxyInstance(?,?,?)返回代理对象
+
+* newProxyInstance()详解:
+
+  ```java
+  public static Object newProxyInstance(ClassLoader loader,
+                                            Class<?>[] interfaces,
+                                            InvocationHandler h)
+      //loader: 目标对象的类的类加载器
+      //interfaces: 目标对象实现的接口类型,使用泛型方法确认类型
+      //h: 是事件处理,执行目标对象的方法时触发事件处理器的方法; 会把当前执行的目标对象方法作为参数传入
+  ```
+
+  
+
+* InvocationHandler:
+
+  ```java
+  new InvocationHandler() {
+      @Override
+      public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+          //第一个参数: 对象; 第二个参数: 执行的方法; 第三个参数: 方法的参数;
+          //一般这么写:
+          System.out.println("start!");
+          Object res = method.invoke(proxy,args);//调用方法
+          System.out.println("end");
+          return res;
+      }
+  }
+  ```
+
+  
+
+* 完整的获取代理对象的方法展示:
+
+  ```java
+     public Object getProxyInstance(){
+          return Proxy.newProxyInstance(target.getClass().getClassLoader(),
+                  target.getClass().getInterfaces(),
+                  new InvocationHandler() {
+                      @Override
+                      public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+                          System.out.println("start!");
+                          Object res = method.invoke(target,args);//注意这里要放target而不是代理对象
+                          System.out.println("end");
+                      }
+                  }
+          );
+      }
+  ```
+
+  
+
+### 5. cglib代理
+
+静态代理和JDK代理都要求目标对象实现一个接口,但是有时候目标对象啥都没实现,这个时候可以使用**目标对象的子类**来完成代理,称为cglib代理.
+
+它也可以归属到动态代理,因为是在内存中构建子类对象来实现目标对象工嗯呢该
+
+cglib是一个高性能__代码生成包,__它可以在运行期拓展java类与实现java接口,它广泛的被使用在AOP框架中.
+
+底层通过字节码处理框架ASM来转换字节码生成新的类.
+
+注意: 目标对象的类不能final,代理的方法不能static或final
+
+![image-20200810195526305](pics/javadesignate/image-20200810195526305.png)
+
+* 说明:
+
+  * 重写Intercept(拦截)方法来调用目标对象的方法
+  * 最上面的接口在jar包里
+
+* 重写的方法:
+
+  * 获取的代理对象调用方法时会触发intercept
+
+  ```java
+  @Override
+  public Object intercept(Object arg0,Method arg1,Object[] arg2,MethodProxy arg3){
+      //arg0: 代理对象
+      //arg1: 方法
+      //arg2: 方法的参数
+      //arg3: 好像不用管
+      arg1.invoke(target,arg2);
+      
+  }
+  ```
+
+* getProxyInstance具体内容
+
+  ```java
+  //创建工具类 + 设置父类 + 设置回调函数 + 创建子类对象(代理对象)
+  public Object getProxyInstance(){
+  	//创建工具类
+      Enhancer enhancer = new Enhancer();
+      //设置父类
+      enhancer.setSuperClass(target.getClass());//目标对象的类
+      //设置回调函数
+      enhancer.setCallback(this);//调用它自己
+      //返回子类对象
+      return enhancer.create();
+  }
+  ```
+
+  
+
+### 6. 几种变体
+
+防火墙代理: 内网通过代理穿过防火墙访问外网
+
+缓存代理: 当请求图片时先到缓存代理取,如果没有就到公网或者数据库
+
+远程代理: 远程对象的本地代表,可以把远程对象当本地用,
+
+同步代理: 主要多线程,多线程同步
+
+
+
+## 十三. 模板方法模式
+
+`Template Method`
+
+### 1. 思想
+
+一个抽象类公开定义了执行它的方法模板
+
+它的子类可以按照方法重写实现,但调用会以抽象类中定义的方石之幸
+
+属于行为型模式
+
+就是父类定下模板,子类跟着做,就是具体实现的区别.
+
+### 2. 钩子方法
+
+在这个抽象类里将你要用的那个方法设置为abstract,其它方法进行空实现，然后你再继承这个抽象类，就不需要实现其它不用的方法，这就是钩子方法的作用。
+
+```java
+public abstract class AbstractClass {
+
+	public abstract boolean isOpen();
+
+	public final void operating() {
+		if(isOpen()) { //一旦实现就进入这里
+			System.out.println("钩子方法开启");
+		}else {
+			System.out.println("钩子方法关闭");
+		}
+	}
+}
+```
+
+## 十四. 命令模式
+
+`command`
+
+### 1. 引例
+
+我们有好多家电,我们不想针对每个家电都装一个APP,我想一个控制所有
+
+每个家电厂家都要提供一个统一的接口给app调用
+
+命令模式将动作请求者(app)和动作执行者解耦出来
+
+### 2. 思想
+
+在软件设计中我们经常需要向用户发一些请求,但是不知道请求的接受者是谁,也不知道被操作的是那个.
+
+我们只需要在程序运行时指定具体的接受者即可,可以用命令模式设计
+
+
+
+在命令模式中会将一个请求封装为一个对象,以便不同<u>参数</u>表示不同请求,同时命令也支持<u>可撤销</u>的操作
+
+![image-20200814192033807](pics/javadesignate/image-20200814192033807.png)
+
+Command有Receiver属性,真正的内容在Command的方法中由Receiver执行
+
+Invoker拥有Command属性,
+
+不同命令有不同接收者,在命令创建时就被确定
+
+## 十五. 访问者模式
+
+`visitor`
+
+### 1. 引例
+
+将观众分为男和女,对一个歌手评价
+
+### 2. 访问者思想
+
+访问者模式封装了一些作用于某种数据结构的各元素的操作,它可以在不改变数据结构的前提下定义作用于这些元素的新操作
+
+主要将数据结构和操作耦合的问题
+
+基本工作原理: 在被访问的类里面加一个对外提供接待访问者的接口
+
+![image-20200815214713345](pics/javadesignate/image-20200815214713345.png)
+
+visitor: 抽象访问者,为ConcreteElement声明一个访问者
+
+ConcreteVisitor: 实现由每个visitor声明一个操作,是Element本应该有的操作
+
+ObjectStructure: 提供一个高层的接口,用来允许访问者访问它的元素
+
+Element: 不建议拓展的部分
+
+### 3. 歌手问题的解决
+
+<img src="pics/javadesignate/image-20200815215313362.png" alt="image-20200815215313362" style="zoom:33%;" />
+
+Action的子类可以拓展,里面有一个使用Man和Woman的方法(getManPoint,getWomanPoint),耦合度高,违背迪米特法则
+
+### 4. 
+
+如果一个系统有稳定的数据结构,又要经常修改需求,可以用这个模式
+
+## 十六. 迭代器模式
+
+`iterator`
+
+### 1. 统一遍历
+

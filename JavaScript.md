@@ -809,7 +809,21 @@ var str = new String("hello");
 
 
 
+## 十. 内建对象: window
 
+### 1. onload事件
+
+### 2. alert
+
+### 3. confirm:
+
+```javascript
+confirm("确认删除?");
+```
+
+确认或取消的对话框
+
+返回一个boolean
 
 # 正则表达式
 
@@ -1123,7 +1137,8 @@ console.log(reg.test("abbbbc"));
               }
   ```
 
-  
+
+事件返回false可以取消默认的跳转行为
 
 ### 3. 文档的加载
 
@@ -1139,7 +1154,7 @@ window.onload = function(){
 }
 ```
 
-## 二. DOM: 元素节点
+## 二. DOM: 查
 
 ### 1. 获取元素节点的方法
 
@@ -1153,15 +1168,382 @@ window.onload = function(){
 
 * 一组对象:
   * 返回一个`HTMLCollection`
+  * 这是一个类数组类型,可以使用length等数组用法,还可以**用下标遍历**
+  * 它的元素就是各个子元素标签
 
 ### 2. 获取元素节点的子元素节点方法
 
 用__元素节点的方法或属性__
 
-|                        |                          |      |
-| ---------------------- | ------------------------ | ---- |
-| getElementsByTagName() | 通过标签名获得一组子元素 | 方法 |
-| childNodes             | 获得所有子元素们(就一级) | 属性 |
-| firstChild             | 当前节点第一个子节点     | 属性 |
-| lastChild              | 获得最后一个子节点       | 属性 |
+|                        |                                    |      |
+| ---------------------- | ---------------------------------- | ---- |
+| getElementsByTagName() | 通过标签名获得一组子元素           | 方法 |
+| childNodes             | 获得所有子<u>Node</u>们(就一级)    | 属性 |
+| firstChild             | 当前节点第一个<u>子节点Node</u>    | 属性 |
+| lastChild              | 获得最后一个<u>子节点</u>          | 属性 |
+| children               | 获取当前元素的所有<u>子元素</u>    | 属性 |
+| firstElementChild      | 第一个子元素.不建议使用(不兼容IE8) |      |
+|                        |                                    |      |
+|                        |                                    |      |
 
+* 子节点:
+  * 元素节点是子节点,文本节点是子节点,元素和元素间的空行也算文本节点
+* 属性: 所有元素属于Elements,都是类数组
+
+### 3. 获取HTML元素的内容
+
+* 获取自己元素之间的内容:
+
+  每个元素都有一个`innerHTML`属性,值为<u>HTML元素之间</u>的内容
+
+  还有`innerText`,将innerHTML的HTML标签去除只留文本
+
+* 获取自己的属性的值
+
+  直接 `对象.属性名(HTML中的属性名)`
+
+  文本框的value就是文本框的内容
+
+* 获取元素的class
+
+  使用`对象.className`
+
+### 4. 获取元素节点的父节点和兄弟节点
+
+|                        |                |      |
+| ---------------------- | -------------- | ---- |
+| parentNode             | 父节点         | 属性 |
+| previousSibling        | 前一个兄弟节点 | 属性 |
+| nextSibling            |                |      |
+| previousElementSibling |                |      |
+| nextElementSibling     |                |      |
+
+### 5. 特殊元素的获取
+
+`document.documentElement`: HTML根标签
+
+`document.add`: 页面中所有元素
+
+`document.getElementsByClassName("str")`:根据类名获取元素,兼容IE9及以上
+
+### 6. 用选择器它不香吗
+
+`document.querySelector("选择器字符串")`
+
+问题: 只查一个,如果满足条件的有多个,只会返回第一个元素
+
+`document.querySelectorAll("选择器字符串")`:
+
+返回所有满足条件的
+
+## 三. DOM:增删改
+
+| DOM对象方法      | 功能                                               | 参数            |
+| ---------------- | -------------------------------------------------- | --------------- |
+| appendChild()    | 添加子节点放在最后                                 | 无              |
+| removeChild()    | 删除子节点                                         | 节点            |
+| replaceChild()   | 替换某个子节点                                     | new节点,old节点 |
+| insertBefore()   | **(调用者是父节点)**在指定子节点前面插入新的子节点 | 新节点,旧子节点 |
+| document:        |                                                    |                 |
+| createElement()  | 创建元素节点                                       | "标签名"        |
+| createTextNode() | 创建文本节点                                       | 内容            |
+|                  |                                                    |                 |
+|                  |                                                    |                 |
+
+### 1. 创建节点并添加到city下
+
+```javascript
+function () {
+	//创建li元素节点
+
+	var htmlliElement = document.createElement("li");
+	var text = document.createTextNode("广州");
+
+	//将广州文本节点设置为li的子节点
+	htmlliElement.appendChild(text);
+
+	var city = document.getElementById("city");
+
+	city.appendChild(htmlliElement);
+}
+```
+
+### 2. 在bj前插入广州
+
+```javascript
+function(){
+   var dbj = document.getElementById("bj");
+   var htmlliElement = document.createElement("li");
+   var text = document.createTextNode("广州");
+
+   htmlliElement.appendChild(text);
+
+   var city = document.getElementById("city");
+   city.insertBefore(htmlliElement,dbj);
+}
+```
+
+### 3. 用innerHTML实现增删改
+
+我们知道innerHTML就是里面的内容,我们可以用父节点的innerHTML修改里面的东西
+
+```javascript
+city.innerHTML += "<li>广州</li>";
+```
+
+缺点: 工作量大,会修改子元素所有内容
+
+优点: 比上面简单
+
+### 4. 试着用表单的内容增加页面内容
+
+如果是一个form,就用return false先取消按钮的跳转默认功能
+
+获取用户填写的信息: 用input的value获取
+
+### 5. 执行流程
+
+for循环会在加载完成后立即执行,响应函数只有在点击时执行,所以函数里的i和for里的i不是同一份
+
+
+
+## 四. DOM:样式
+
+### 1. 内联样式的修改和获取
+
+```javascript
+元素.style.样式名 = 样式值(字符串)
+```
+
+* 示例
+
+  ```javascript
+  box1.style.width = "300px";
+  ```
+
+* 注意:
+
+  * 如果CSS样式中有`-`号,如background-color,需要修改为驼峰命名
+
+    ```javascript
+    box1.style.backgroundColor
+    ```
+
+  * 修改的是内联样式,修改后会立即执行,除非被!important覆盖
+
+* 返回__内联样式__字符串
+
+```javascript
+元素.style.样式名 //这家伙的值就是样式值
+```
+
+### 2. 获取当前显示的样式
+
+* <b style="color:red">IE专用</b>
+
+```javascript
+元素.currentStyle.样式名
+```
+
+* 其他浏览器
+  * 使用window的方法`getComputedStyle()`获取元素当前样式
+  * 需要两个参数
+    * 元素
+    * 可以传递一个伪元素或者null
+  * 返回一个[object CSSStyleDeclaration],封装了当前元素对应的样式
+  * 用 `返回值.样式` 获取值(字符串)
+
+### 3. 其他和样式有关的属性方法
+
+```javascript
+元素.clientHeight
+元素.clientWidth    //属性,获取元素的可见高度/可见宽度
+
+```
+
+* 注意:
+  * 返回的是Number而不是String
+  * 返回的高度宽度 包含 内容区+padding(不包括边框)
+  * 都是__只读__
+  * 不包括滚动条
+
+```javascript
+元素.offsetHeight
+元素.offsetWidth
+```
+
+注意:
+
+* 返回的是Number而不是String
+* 返回的高度宽度 包含 内容区+padding+**bording**
+* 都是__只读__
+
+```javascript
+元素.offsetParent //获取当前元素的定位父元素
+```
+
+* 定位父元素
+  * 根据哪个父元素定位就返回哪个(最近的非static定位的父元素)
+
+```javascript
+元素.offsetLeft
+元素.offsetTop
+//返回元素的偏移量(相对于其定位父元素)
+```
+
+```javascript
+元素.scrollHeight//返回元素整体高度
+元素.scrollLeft//返回元素左边缘与视图的距离
+元素.scrollTop//返回元素上边缘和视图的举例
+元素.scrollWidth//返回元素整体宽度
+```
+
+* 获取整个__滚动区域__的整体高度和宽度
+* 返回滚动条的滚动距离(相对左,上)
+
+> 当`scrollHeight-scrollTop = clientHeight`,滚动到底
+>
+> 有的是浮点,建议相减的绝对值小于1
+
+## 五. 事件对象
+
+引例: 当鼠标在一个Div中移动时,另一个div显示它在那个div的相对坐标
+
+我们使用`onmousemove`事件,用大DIV绑定
+
+### 1. 事件对象
+
+事件响应函数被触发时,每次都会将一个实践对象作为实参传递给响应函数
+
+可以在事件中定义一个形参接收
+
+它__封装了相关信息__(比如鼠标坐标,滚轮方向,键盘按键)
+
+![image-20200815160451533](pics/JavaScript/image-20200815160451533.png)
+
+使用ClientX和ClientY可以获取鼠标指针的水平/垂直坐标,获得相对于窗口的坐标
+
+pageX,pageY返回页面(真的顶部,真的左边)的相对坐标,不兼容IE8
+
+### 2. 事件冒泡
+
+冒泡: 指事件的向上传导,当后代元素的事件被触发,其父元素相同事件也会被触发
+
+
+
+* 消除冒泡
+
+  * ```javascript
+    event.cancelBubble() 
+    ```
+
+  * 
+
+### 3. 事件委派
+
+问题: 我们只能为已有的绑定响应函数,还得每个绑定一个. 我们希望只绑定一次就应用到所有
+
+
+
+我们可以把事件委派给共同父元素,用冒泡从子元素传到父元素使用
+
+并使用event的target属性获取精确的触发事件的子元素
+
+### 4. 事件绑定
+
+`addEventListener()`增加绑定函数并且**不会覆盖**
+
+```javascript
+btn1.addEventListener("click",function(){alert("a")},false)
+//事件名,不加on
+//回调函数
+//是否在捕获阶段触发事件
+```
+
+不支持ie8,用attachEvent,没有第三个参数
+
+### 5. 事件的传播
+
+微软认为时间由内向外传播,应该先触发子元素再触发父元素
+
+网景公司认为应该由外向内,应该先触发父元素
+
+W3C将事件分成了三个阶段: 
+
+* 捕获,从外层window到内层,但不会触发,addEventListener第三个参数可以指定在这执行,一般不用
+* 目标,捕获到目标元素
+* 冒泡,往外冒泡
+
+### 6. 拖拽
+
+使用`onmousedown`,`onmouseup`,`onmousemove`事件
+
+事件的取消: 将事件赋值为null,甚至可以赋值自己成为一次性事件
+
+如果被覆盖,会使事件失效,怎么办?给document绑定
+
+```javascript
+window.onload = function(){
+    var box = document.getElementById("box1");
+    box.onmousedown = function(event){
+        var xx = event.pageX - box.offsetLeft; //一开始就算好偏移量
+        var yy = event.pageY - box.offsetTop;
+
+        document.onmousemove = function (event) {
+            var x = event.pageX - xx;
+            var y = event.pageY - yy;
+
+            box.style.left = x + "px";
+            box.style.top = y + "px";
+        }
+        document.onmouseup = function(){
+            document.onmousemove = null;//取消事件
+
+            document.onmouseup = null;//一次性事件
+        }
+    }
+```
+
+问题: 拖拽网页内容时有时自动回去搜索殷勤,需要取消;
+
+> 使用return false可以取消事件的默认行为
+
+### 7. 滚轮事件
+
+`onmousewheel`,火狐不兼容,使用DOMMouseScroll,addEventListener绑定
+
+event:
+
+```javascript
+event.wheelDelta //获得滚轮滚动的方向,往上为正,往下为负; 火狐用detail,方向相反
+						
+```
+
+需要return false取消滚动条行为
+
+### 8. 键盘事件
+
+`onkeydown`,`onkeyup`
+
+绑定在可以获取到焦点的对象上或者document
+
+* 对于onkeydown,一直按着,事件会一直触发,第一次和第二次间隔大,后面小
+* 对于按键,得问event按的是谁
+
+```javascript
+event.keyCode //获取按键编码(number)
+
+```
+
+* 检查ctrl+y
+
+  ```javascript
+  if(event.ctrlKey){
+      //还有alt,shift的用法
+      if(keyCode === 'Y'){
+          ...
+      }
+  }
+  ```
+
+  
