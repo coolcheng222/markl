@@ -1,0 +1,85 @@
+<!doctype html>
+<html>
+<head>
+<meta charset='UTF-8'><meta name='viewport' content='width=device-width initial-scale=1'>
+<title>myfunc</title></head>
+<body><p>&nbsp;</p>
+<h1>Mysql函数</h1>
+<blockquote><div>[TOC]</div>
+</blockquote>
+<h2>字符函数</h2>
+<figure><table>
+<thead>
+<tr><th>函数名</th><th>返回值</th></tr></thead>
+<tbody><tr><td>concat(str1,str2,...)</td><td>字节数</td></tr><tr><td>length(str)</td><td>拼接</td></tr><tr><td>upper(str)/lower(str)</td><td>大写/小写</td></tr><tr><td>substr/substring(str,n)</td><td>截取字符串(从n到末尾)</td></tr><tr><td>substr(str,m,n)</td><td>(从m到n)<sup class='md-footnote'><a href='#dfref-footnote-1' name='ref-footnote-1'>1</a></sup></td></tr><tr><td>instr(str1,str2)</td><td>返回str2在str1中的起始索引</td></tr><tr><td>trim(str)</td><td>去掉前后的空格</td></tr><tr><td>trim(char1 FROM str)</td><td>去掉前后的char1字符</td></tr><tr><td>lpad(str,n,char)</td><td>用指定的字符<strong>左填充</strong>至指定长度(多则截断)</td></tr><tr><td>rpad(str,n,char)</td><td>用指定的字符<strong>右填充</strong>至指定长度(多则截断)</td></tr></tbody>
+</table></figure>
+<hr />
+<h2>数学函数</h2>
+<figure><table>
+<thead>
+<tr><th>函数</th><th>返回值</th></tr></thead>
+<tbody><tr><td>round(num)</td><td>四舍五入返回整数</td></tr><tr><td>round(num,n)</td><td>四舍五入保留小数点后n位</td></tr><tr><td>ceil(num)</td><td>向上取整</td></tr><tr><td>floor(num)</td><td>向下取整</td></tr><tr><td>truncate(num,n)</td><td>小数点后保留n位,不舍</td></tr><tr><td>mod(a,b)</td><td>a%b<sup class='md-footnote'><a href='#dfref-footnote-2' name='ref-footnote-2'>2</a></sup></td></tr></tbody>
+</table></figure>
+
+<hr />
+<h2>日期函数</h2>
+<figure><table>
+<thead>
+<tr><th>函数</th><th>返回值</th></tr></thead>
+<tbody><tr><td>now()</td><td>当前时间</td></tr><tr><td>curdate()</td><td>系统日期</td></tr><tr><td>curtime()</td><td>当前时分秒</td></tr><tr><td>year(date)</td><td>返回年</td></tr><tr><td>month(date)</td><td>返回月</td></tr><tr><td>month_name(date)</td><td>返回月(英语)</td></tr><tr><td><strong>str_to_date</strong>(str,<a href='# str_to_date参数'>for_str</a>)</td><td>按照for_str把str改成date格式</td></tr><tr><td>date_format(date,format)</td><td>把日期以format转化为字符串</td></tr></tbody>
+</table></figure>
+<h3>str_to_date参数</h3>
+<figure><table>
+<thead>
+<tr><th>格式符</th><th>功能</th></tr></thead>
+<tbody><tr><td>%Y</td><td>四位的年份</td></tr><tr><td>%y</td><td>二位的年份</td></tr><tr><td>%m</td><td>月份(01,02...)</td></tr><tr><td>%c</td><td>月份(1,2...)</td></tr><tr><td>%d</td><td>日(01,02...)</td></tr><tr><td>%h</td><td>小时(12小时制)</td></tr><tr><td>%H</td><td>小时(24小时制)</td></tr><tr><td>%i</td><td>分钟(00,01....)</td></tr><tr><td>%s</td><td>秒(00,01....)</td></tr></tbody>
+</table></figure>
+<h2>其他函数</h2>
+<ul>
+<li>version() 查看版本</li>
+<li>database() 查看数据库</li>
+
+</ul>
+<h2>流程控制</h2>
+<figure><table>
+<thead>
+<tr><th>函数</th><th>返回值</th></tr></thead>
+<tbody><tr><td>if(exp,a,b)</td><td>exp为true则a,否则b</td></tr><tr><td><a href='# case'>case</a></td><td>见详解<sup class='md-footnote'><a href='#dfref-footnote-3' name='ref-footnote-3'>3</a></sup></td></tr></tbody>
+</table></figure>
+
+<h3>case</h3>
+<ol start='' >
+<li><p>用法:<sup class='md-footnote'><a href='#dfref-footnote-4' name='ref-footnote-4'>4</a></sup></p>
+<pre><code class='language-sql' lang='sql'>case expression
+when 常量1 语句1或值1;
+
+#若是值可以没有分号,不需要delimiter
+
+when 常量2 语句2或值2;
+...
+else 语句n或值n
+end;
+</code></pre>
+</li>
+
+</ol>
+
+<ol start='2' >
+<li><p>直接用:</p>
+<pre><code class='language-sql' lang='sql'>case
+when 条件1 值或语句
+...
+else 值或语句
+end
+</code></pre>
+<p>&nbsp;</p>
+</li>
+
+</ol>
+
+<div class='footnotes-area'  ><hr/>
+<div class='footnote-line'><span class='md-fn-count'>1</span> 从0开始<a name='dfref-footnote-1' href='#ref-footnote-1' title='回到文档' class='reversefootnote' >↩</a></div>
+<div class='footnote-line'><span class='md-fn-count'>2</span> a-a/b*b<a name='dfref-footnote-2' href='#ref-footnote-2' title='回到文档' class='reversefootnote' >↩</a></div>
+<div class='footnote-line'><span class='md-fn-count'>3</span> ctrl+点击跳转<a name='dfref-footnote-3' href='#ref-footnote-3' title='回到文档' class='reversefootnote' >↩</a></div>
+<div class='footnote-line'><span class='md-fn-count'>4</span> 若when后面有语句需要改变结束符<a name='dfref-footnote-4' href='#ref-footnote-4' title='回到文档' class='reversefootnote' >↩</a></div></div></body>
+</html>
