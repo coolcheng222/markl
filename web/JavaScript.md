@@ -1591,3 +1591,56 @@ BOM中提供了一组对象来操作,比如 window,Navigator,Location,History,Sc
 * forward(): 前进
 * go(): 可以用来跳转指定页面 
   * 参数: 正整数: 向前跳转n个,负整数: 向后跳转n个
+
+## 三. location
+
+### 1. 简单跳转
+
+封装了地址栏信息,toString就是地址栏内容
+
+直接赋值就可以跳转页面并生成相应历史记录(跳转)
+
+```javascript
+//直接赋值就可以跳转页面
+location = "http://www.baidu.com"; // 跳转页面
+```
+
+### 2. 属性
+
+```javascript
+hash //从#开始的url
+host //主机
+port
+hostname
+href //完整url
+protocol//协议
+search//?开始的查询部分
+```
+
+### 3. 方法
+
+```javascript
+location.assign(URL/路径); //跟赋值一样,跳转
+location.reload([boolean]); //刷新,传个true指明清空缓存
+location.replace(路径/url); //用新的页面替换旧页面,没有历史记录
+```
+
+## 四. window
+
+### 1. 定时器
+
+```javascript
+window.setInterval(func,ms);
+//定时调用,每隔一段时间执行一次,按毫秒数间隔
+关闭定时器:
+//setInterval会返回一个number类型的数据,是定时器的ID(唯一标识)
+window.clearInterval(ID);
+//可以放在函数func里,用if分支
+```
+
+### 2. 延时器
+
+```javascript
+setTimeout(func,ms);//延时调用,一个函数不马上执行隔一段时间执行
+```
+

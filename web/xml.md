@@ -221,3 +221,62 @@ xw.write(read); //把我们修改的文档对象传进去
 xw.close(); // 是一个Writer,需要关流
 ```
 
+## 三. xPath
+
+xPath是在XML中查找信息的__语言__,跟jQurey的选择器一个概念,简化dom查找
+
+需要导包`jaxen-....jar`
+
+### 1. 语法
+
+xPath类似于在一个文件系统中定位文件,如果路径以`/`开始就找绝对路径
+
+* 实例1:以`/`开头的绝对路径
+
+  ```xml
+  <!--xml文件-->
+  <AAA>
+      <BBB></BBB>
+      <CCC></CCC>
+  </AAA>
+  ```
+
+  * 选中AAA: `/AAA`
+  * 选中CCC: `/AAA/CCC`
+
+* 实例2: 以`//`开头的路径
+
+  * 寻找满足双斜线后面的内容
+  * 比如: 
+    * `//AAA`查找所有AAA
+    * `//DDD/BBB`查找//DDD(所有DDD),然后找它子元素BBB
+
+* 实例3: `*`表示当前路径所有的元素
+
+  * `/AAA/DDD/*` AAA/DDD下所有元素
+  * `/*/*/BBB`所有在第三层的BBB(`/*`第一层所有,`/*`第二层所有)
+
+* 实例4: `[]`表示下标,第几个(从1开始,last()表示最后一个)
+
+  * `/AAA/BBB[1]`AAA下第一个BBB
+  * `/AAA/BBB[last()]`AAA下最后一个BBB
+
+* 实例5: `@属性名`表示查找有属性的元素
+  * `//@id`查找有id的
+  * `/AAA/BBB[@id]`查找有id的BBB
+  * `//BBB[@name="aaa"]`还能指定属性值
+  * `//BBB[normalize-space(@name)='bbb']` 去掉前后空格的属性name
+
+### 2. 在哪用
+
+先解析(SAXReader),再获得根节点(getRootElement)
+
+然后根节点调用`List selectNodes(String xpathExpression)`方法
+
+或者`Node selectSingleNode(String xpath)`;
+
+```java
+Node node = root.selectSingleNode("/students/student");
+```
+
+> 备注: Node是一个接口,Element,Attribute都是它的实现类

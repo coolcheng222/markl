@@ -1227,3 +1227,30 @@ Action的子类可以拓展,里面有一个使用Man和Woman的方法(getManPoin
 
 ### 1. 统一遍历
 
+一个体系中有数组有集合,如何才能做到统一遍历?
+
+![iterator](pics/javadesignate/iterator.jpg)
+
+迭代器握有要遍历的内容,它是从聚合类中获得的
+
+## 七. 观察者模式
+
+`Observer`
+
+### 1. 引例
+
+气象站每天测量到的信息以公告方式传出去,需要一个开放型API以便第三方获取
+
+数量一旦更新,需要实时通知第三方
+
+### 2. 思想
+
+观察者模式类似于订牛奶业务
+
+奶站: Subject,能登记移除,和通知(notify)Observer
+
+用户: Observer
+
+观察者模式适用于__多对一__对象依赖的设计方案,被依赖对象为Subject(一),依赖对象为Observer(多)
+
+![image-20200826205025563](pics/javadesignate/image-20200826205025563.png)

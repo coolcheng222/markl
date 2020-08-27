@@ -321,3 +321,105 @@ css(name,value) //设置值
 css({name:value,name:value}) // 设置多个值
 ```
 
+### 2. 位置
+
+offset和position方法
+
+```javascript
+//获取
+offset() //返回一个含有left和top属性的offset对象
+//是相对于页面
+
+position() //返回一个含有left和top属性的position对象
+//相对于父元素,不管有没有开定位
+
+//设置
+一样的方法,传有left和top的对象
+```
+
+scrollTop/scrollLeft方法
+
+```javascript
+scrollTop([value]);//获取或者设置滚动的顶部和真正的顶部(滚动区)的相对距离
+```
+
+### 3. 尺寸
+
+`height()`和`width()`方法
+
+* 内容尺寸: 内容区
+
+  ```javascript
+  height(); //设置和获取高度
+  width(); //设置和获取宽度
+  ```
+
+* 内部尺寸: 内容区+内边距
+
+  ```javascript
+  innerHeight(); //设置和获取高度
+  innerWidth(); //设置和获取宽度
+  //似乎可以设置,改的是内容区
+  ```
+
+* 外部尺寸: 边框+内容+内边距(+margin)
+
+  ```javascript
+  outerHeight(boolean); //设置和获取高度
+  outerWidth(boolean); //设置和获取宽度
+  //传true获得外边距,大概不推荐修改
+  ```
+
+  
+
+## 八. 筛选
+
+都是jQuery对象的方法,就是选择器plus
+
+### 1. 过滤
+
+从jQuery中过滤需要的. 数据是和对象有关系的
+
+> eq(index),first(),last(),
+>
+> filter("选择器"),not("选择器")
+>
+> has("选择器") //有指定子元素
+
+```javascript
+
+//         需求:
+//         1. ul下li标签第一个
+var li1 = $("ul > li").first();
+$("ul>li").eq(0);
+
+//         2. ul下li标签的最后一个
+$("ul>li").last();
+
+//         3. ul下li标签的第二个
+$("ul>li").eq(1);
+
+//         4. ul下li标签中title属性为hello的
+$("ul>li").filter("[title=hello]")
+//         5. ul下li标签中title属性不为hello的
+$().not("[title=hello]")
+$().filter("[title][title!=hello]")
+
+//         6. ul下li标签中有span子标签的
+$().has("span");
+```
+
+### 2. 查找
+
+从jQuery对象的**子孙后代兄弟姐妹**里找符合条件的节点
+
+* `children(选择器)`
+  * 找__子元素__
+* `find(选择器)`
+  * 找__后代元素__
+* `parent()`
+  * 找父元素
+* `prevAll(选择器)`
+  * 找前面的兄弟元素
+* `siblings(选择器)`
+  * 找所有兄弟元素
