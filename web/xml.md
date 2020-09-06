@@ -60,6 +60,12 @@
 >
 > 1. 导入dom解析包,maven
 >
+>    ```text
+>    使用SAXReader需要两个jar包
+>    dom4j-1.6.1.jar
+>    jaxen-1.1-beta-6.jar
+>    ```
+>
 > 2. 创建一个`SAXReader`,一个xml文档阅读器
 >
 > 3. 使用saxReader读取文件即可,返回一个`Document`对象(文档对象)

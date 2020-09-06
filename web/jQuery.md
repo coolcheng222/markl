@@ -95,7 +95,7 @@ $("<div style='background-color: red;width: 100px;height: 100px'></div>").append
 | 方法                                                       | 描述                                                         |
 | ---------------------------------------------------------- | ------------------------------------------------------------ |
 | [bind()](event_bind.asp)                                   | 向匹配元素附加一个或更多事件处理器                           |
-| [blur()](event_blur.asp)                                   | 触发、或将函数绑定到指定元素的 blur 事件                     |
+| blur                                                       | 失去焦点                                                     |
 | [change()](event_change.asp)                               | 触发、或将函数绑定到指定元素的 change 事件                   |
 | [click()](event_click.asp)                                 | 触发、或将函数绑定到指定元素的 click 事件                    |
 | [dblclick()](event_dblclick.asp)                           | 触发、或将函数绑定到指定元素的 double click 事件             |
@@ -111,7 +111,7 @@ $("<div style='background-color: red;width: 100px;height: 100px'></div>").append
 | [event.timeStamp](event_timeStamp.asp)                     | 该属性返回从 1970 年 1 月 1 日到事件发生时的毫秒数。         |
 | [event.type](event_type.asp)                               | 描述事件的类型。                                             |
 | [event.which](event_which.asp)                             | 指示按了哪个键或按钮。                                       |
-| [focus()](event_focus.asp)                                 | 触发、或将函数绑定到指定元素的 focus 事件                    |
+| [focus()](event_focus.asp)                                 | 获得焦点                                                     |
 | [keydown()](event_keydown.asp)                             | 触发、或将函数绑定到指定元素的 key down 事件                 |
 | [keypress()](event_keypress.asp)                           | 触发、或将函数绑定到指定元素的 key press 事件                |
 | [keyup()](event_keyup.asp)                                 | 触发、或将函数绑定到指定元素的 key up 事件                   |
@@ -423,3 +423,348 @@ $().has("span");
   * 找前面的兄弟元素
 * `siblings(选择器)`
   * 找所有兄弟元素
+
+## 九. 文档处理
+
+### 1. 增
+
+> "$()"传入标签是创建对应的标签对象
+
+* 内部插入(加子元素)
+
+  * `a.append(b)`,将b添加为a的最后一个子元素
+
+    * b是标签字符串,选择器,DOM元素,jQuery对象
+
+    ```javascript
+    $("#ul1").append("<span>ooo</span>");//
+    ```
+
+  * `a.appendTo(b)`,将a作为b的最后一个子元素
+
+    ```javascript
+    $("<span>ooo</span>").appendTo("#ul1");
+    ```
+
+  * `a.prepend(b)`把b添加为a的第一个子元素
+
+  * `a.prependTo(b)`,把a添加为b的第一个子元素
+
+* 外部插入(加兄弟元素)
+
+  * `a.after(b)`a后面插入一个b
+  * `a.before(b)`a前面插入一个b
+
+### 2. 改
+
+* `a.replaceWith(b)`把a全换成b
+* `a.replaceAll(选择器)`把选择器里的东西替换成a
+
+### 3. 删
+
+`empty()`把子元素删光
+
+`remove()`把自己删光
+
+## 十. 事件处理
+
+### 1. 事件绑定和解除
+
+* 绑定<u>点击</u>事件的两种方案
+
+```javascript
+o.click(func); //绑定点击
+
+$(".out").on("click",function () {
+	//一些事件没有对应绑定方法,需要用on搞定
+    //
+})
+```
+
+* 绑定<u>鼠标移入移出</u>事件的三种方法
+
+```javascript
+let $inner = $(".inner");
+$inner.mouseenter(function(){});
+$inner.mouseleave(function(){});
+
+$inner
+    .on("mouseenter",function(){})
+    .on("mouseleave",function(){});
+
+$inner.hover(function () {},function(){})
+//(移入的回调,移出的回调)
+```
+
+* 解除所有事件监听/指定事件
+
+  ```javascript
+  o.off(); // 解除所有监听
+  o.off("click");
+  ```
+
+* 事件坐标
+
+  ```javascript
+  event.clientX event.clientY // 相对于窗口的左上角(会滚动)
+  event.pageX event.pageY //相对于页面左上角的坐标(页面不会滚动)
+  event.offsetX event.offsetY //相对于当前元素左上角的坐标
+  ```
+
+* 解除事件冒泡
+
+  ```javascript
+  event.stopPropagation();
+  ```
+
+* 阻止默认行为
+
+  ```javascript
+  event.preventDefault();
+  ```
+
+  
+
+### 2. 区分mouseover和mouseenter
+
+mouseover/mouseout: 到子元素也算出去,从子元素进来也算进来
+
+mouseenter/mouseleaver: 到子元素也算在元素里面
+
+hover对应mouseenter/mouseleave
+
+### 3. 事件委派
+
+就是把监听加在父元素上,JS里不就讲过吗
+
+结合event.target使用
+
+jq API:
+
+```javascript
+$(parentNode).delegator(选择器,事件,回调函数); //回调函数的this是事件元素
+
+$(parent).undelegator(事件); //移除事件委托
+```
+
+
+
+
+
+## 十一. 动画效果
+
+### 1. 淡入淡出
+
+* 淡出淡入,toggle
+
+```javascript
+$div1.fadeOut(); //逐渐修改opacity达到淡出的效果,最后把display改成none
+$div1.fadeIn(); //把display改成block,然后增大opacity
+
+//参数1: speed,填字符串或者数值
+$div.fadeOut("slow"/"normal"/"fast");
+$div.fadeOut(600/400/200);//指明淡出的毫秒数
+
+$div.fadeToggle(500);//自动切换,参数一样
+```
+
+### 2. 滑动
+
+```javascript
+1. slideDown(): 带动画的展开
+2. slideUp(): 带动画的收缩
+3. slideToggle(): 带动画的切换展开/收缩
+//可以传入speed
+//修改的是高度,向上是减height到0,向下是还原
+```
+
+### 3. 显示隐藏
+
+```javascript
+show()
+hide()
+toggle()
+//不加参数瞬间完成,加了speed慢慢完成
+//通过宽高透明度的改变来控制,左上角固定
+```
+
+### 4. 自定义动画
+
+```javascript
+animate(params,speed)
+//params: 一个对象,指定要修改什么
+$div1.animate({
+	width: 200,
+    height: 200
+    //可以不加单位
+},1000) //逐渐同时改变,想要分别变就用两个animate链式调用
+//还可以指定移动到位置,指定left,top
+```
+
+
+
+```javascript
+//指定移动的距离
+$div.animate({
+    top: "+=100",
+    left: "-=100"
+})//指定移动距离为100,-100
+```
+
+* 停止动画
+
+  ```javascript
+  $div.stop();
+  ```
+
+  
+
+## 十二. 多库共存
+
+如果有几个库都有$符,就不能用了,就用jQuery
+
+然后释放$符的使用权
+
+```javascript
+jQuery.noConflict()
+```
+
+## 十三. onload和ready
+
+window.onload针对了整个页面包括页面中的部分
+
+ready只有页面的dom树
+
+所以在$()里面不适合取图片的长度
+
+```javascript
+$('img1').on('load',function(){})
+```
+
+## 十四. jQuery插件
+
+```javascript
+jQuery/$.extend(object) //拓展$本身 $.xxx
+jQuery/$.fn.extend(object) //拓展$元素集,$().xxx
+
+object= { 
+    min:function(){},
+	max: function(){}
+}//这样就加了min和max方法
+```
+
+# jQuery插件
+
+`jquery-validation`
+
+`jquery UI`
+
+`laydate`
+
+## 一. jquery-validation
+
+声明式验证,只需要声明规则,插件就帮你查看
+
+### 1. 引入
+
+```javascript
+<script src="../jquery-validation-1.15.0/lib/jquery.js"></script>
+<script src="../jquery-validation-1.15.0/dist/jquery.validate.js"></script>
+```
+
+### 2. 默认错误提示
+
+所示都能成为input表单的属性
+
+```html
+<input name="username" minlength="2" required />
+```
+
+equalTo后面加选择器
+
+```javascript
+	messages: {
+		required: "This field is required.",
+		remote: "Please fix this field.",
+		email: "Please enter a valid email address.",
+		url: "Please enter a valid URL.",
+		date: "Please enter a valid date.",
+		dateISO: "Please enter a valid date ( ISO ).",
+		number: "Please enter a valid number.",
+		digits: "Please enter only digits.",
+		equalTo: "Please enter the same value again.",
+		maxlength: $.validator.format( "Please enter no more than {0} characters." ),
+		minlength: $.validator.format( "Please enter at least {0} characters." ),
+		rangelength: $.validator.format( "Please enter a value between {0} and {1} characters long." ),
+		range: $.validator.format( "Please enter a value between {0} and {1}." ),
+		max: $.validator.format( "Please enter a value less than or equal to {0}." ),
+		min: $.validator.format( "Please enter a value greater than or equal to {0}." ),
+		step: $.validator.format( "Please enter a multiple of {0}." )
+	},
+
+```
+
+### 3. 开启验证
+
+```javascript
+$("#myForm").validate(); //对form开启
+```
+
+### 4. 修改提示样式
+
+提示文字拥有class为`error`,可以写一个css修改样式
+
+### 5. 修改错误信息
+
+validate()可以传一个对象包含错误信息
+
+```javascript
+$("#myForm").validate({
+            messages: {
+                username:{ //是表单的name的值
+                    required: '用户名必须',
+                    minlength: '至少6位'
+                },
+                pwd1 : {
+                    required: '密码必须'
+                }
+            }
+        });
+```
+
+## 二. jQuery UI
+
+### 1. 引入
+
+```javascript
+    <link rel="stylesheet" href="jquery-ui.css">
+    <script src="jquery.js"></script>
+    <script src="jquery-ui.js"></script>
+```
+
+### 2. 使用accordion效果
+
+```javascript
+$(function(){
+        $("#according").accordion()
+    })
+```
+
+```html
+<div id="according">
+    <h3>First</h3>
+    <div>Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet.</div>
+    <h3>Second</h3>
+    <div>Phasellus mattis tincidunt nibh.</div>
+    <h3>Third</h3>
+    <div>Nam dui erat, auctor a, dignissim quis.</div>
+</div>
+```
+
+## 三. 网页日期控件laydate
+
+### 1. 引入
+
+![image-20200905112659809](../pics/jQuery/image-20200905112659809.png)这些文件都是必要的,然后引入laydate.js就行了
+
+然后用laydate()

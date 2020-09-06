@@ -1548,6 +1548,26 @@ event.keyCode //获取按键编码(number)
 
 
 
+### 2. 加个类
+
+```javascript
+if(/\bb2\b/.test(a.className())){}
+    a.className += " b2";
+}
+```
+
+
+
+## 六. 简便的CSS修改
+
+### 1. 修改类
+
+创建两个class对应的css,在想修改css时可以通过修改className间接的修改css
+
+* 好处:
+  * 降低行为和表现的耦合
+  * 不需要渲染页面
+
 
 # BOM
 
@@ -1642,5 +1662,55 @@ window.clearInterval(ID);
 
 ```javascript
 setTimeout(func,ms);//延时调用,一个函数不马上执行隔一段时间执行
+```
+
+# JSON
+
+### 1. 它能干啥
+
+我们想在语言间传递类太难了,但是我们可以传字面量比如常数和字符串
+
+所以我们用`JSON字符串`,本质就是特殊格式的字符串,可以被任何语言识别
+
+全名: `JavaScript Object Notation` JS对象表示法
+
+所以对象的语法就是JS的对象语法
+
+```json
+
+'{"name":"sun","age":18,"gender":"M"}'
+```
+
+### 2. 语法
+
+虽然说是JS语法,但是
+
+* 属性名必须用**双引号**包裹
+* 值: 字符串,数值,布尔,空null,对象,数组
+  * undefined和函数不能传
+* 其他和js一致
+
+### 3. 分类
+
+* 对象 {}
+
+* 数组 []
+
+  * ```json
+    '[1,2,3,"aaa"]'
+    ```
+
+​      
+
+### 4. 内置工具类JSON
+
+<span style="color:red">IE7没有</span>
+
+方法:
+
+```javascript
+JSON.parse('[1,2,3,"aaa"]'); //把json字符串转换成对象
+
+JSON.stringify(obj); //将对象转换为json字符串
 ```
 
