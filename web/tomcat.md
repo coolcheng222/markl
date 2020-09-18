@@ -574,6 +574,14 @@ HttpServletRequest封装了浏览器发给服务器的请求信息
   * 作为域对象共享数据
 
     > 现在收集了application,request两个域对象,**还剩两个**
+    
+  * 获取项目虚拟路径
+  
+    ```java
+    request.getContextPath();
+    ```
+  
+    
 
 ### 5. 重定向和转发
 
@@ -610,7 +618,7 @@ HttpServletRequest封装了浏览器发给服务器的请求信息
 
 直接用Servlet的响应写数据会发生乱码
 
-因为浏览器不知道servlet写的编码,默认ISO8859-1
+因为浏览器不知道servlet写的编码,默认ISO-8859-1
 
 ### 1. 响应乱码解决
 
@@ -667,7 +675,7 @@ System.out.println(parameter);
 
 绝对路径以`/`开头
 
-所有在页面上的绝对路径都是从**服务器的根**开始
+所有在页面上的绝对路径都是从**服务器的根**开始,jsp从项目开始
 
 ```
 / == localhost:8080/

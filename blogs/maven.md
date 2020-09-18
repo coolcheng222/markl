@@ -9,24 +9,22 @@ date: 2020-9-5 19:06:00
 解决方案: 在pom.xml的插件中指定主类
 
 ```xml
-  <build>
+ <build>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
-                <version>3.1</version>
+                <version>3.1.0</version>
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>
-                            	xxx.xxxx
-                            </mainClass>
+                            <mainClass>xx.xx(主类全类名)</mainClass>
                         </manifest>
                     </archive>
                 </configuration>
             </plugin>
-        </plugins>
-    </build>
+     </plugins>
+</build>
 ```
 
 2. **依赖不出现在jar包里**

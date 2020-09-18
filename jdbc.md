@@ -713,6 +713,8 @@ conn.setTransactionIsolation(常量/值);
 * 在实例化时提供__接口__规范对表的提取方法
 * 然后提供实现类同时继承抽象类和实现接口
 
+在书城项目中有完整的DAO体系
+
 ## 八. 数据库连接池
 
 ### 1. 必要性
@@ -981,3 +983,45 @@ DBUtils.closeQuietly(rs);
 //不用处理异常的关闭
 ```
 
+## 拓展: BeanUtils
+
+第三方工具类,拥有各种花式操作bean的方法
+
+`commons-beanutils-1.8.0.jar`
+
+`commons-logging-1.1.1.jar`
+
+### 1. 方法
+
+* `setProperty` 设置属性值
+
+  ```java
+  BeanUtils.setProperty(bean, name, value);
+  //bean: 哪个对象 Object
+  //name: 属性名 String
+  //value: 属性值 Object
+  ```
+
+  * 拥有智能化,可以把字符串转成数字,如果不能转就回归默认值
+  * 针对的是__getter,setter__而不是属性本身
+
+  > bean的属性真正的名字是set,get后面的字符串
+
+* `populate`
+
+  * 将map中的键值对直接映射到bean中
+
+    ```java
+    BeanUtils.populate(bean, properties);
+    //bean: 对象,Object
+    //properties: Map
+    ```
+
+  * 实例: request获取map直接封装成bean
+
+    ```java
+    Map<String, String[]> parameterMap = request.getParameterMap();
+    BeanUtils.populate(t, parameterMap);
+    ```
+
+    
