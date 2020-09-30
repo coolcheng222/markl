@@ -611,3 +611,498 @@ ${ paramValues.ah[0]} // 从返回的String取索引为0的,直接[0]
     >
     > 5. 空字符 ''
 
+# JSTL
+
+`JSP Standard Tag Library`jsp标准标签库
+
+## 一. 绪论
+
+EL还不够,我们还要消灭脚本片段. 引入了一组有功能的标签JSTL
+
+其标准由SUN公司建立
+
+### 1. 组成
+
+JSTL由五个不同功能的标签库组成
+
+| 功能范围     | 前缀 |
+| ------------ | ---- |
+| 核心         | c    |
+| 格式化       | fmt  |
+| 函数         | fn   |
+| 数据库(不用) |      |
+| xml(不用)    |      |
+
+
+
+## 二. 使用
+
+### 1. 导入jar包
+
+`taglibs-standard-impl-1.xx.jar`
+
+`taglibs-standard-spec-1.x.x.jar`
+
+### 2. 导入标签库
+
+使用jsp指令的`taglib`
+
+```jsp
+
+<%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%
+//用来导入标签库
+	//prefix: 前缀   前缀就类似于<jsp:forward>里的jsp
+	//uri: 标签库uri
+	//ide基本都有自动提示
+%>
+```
+
+### 3. 使用核心标签库
+
+## 三. 核心标签库
+
+### 1. c:out输出
+
+功能就是输出value属性中的内容
+
+```jsp
+<c:out value="aaa" default="" escapeXml="true"></c:out>
+<c:out value="${user }" default="" escapeXml="true"></c:out>
+<%
+	//value: 要输出的值
+	//default: value为空(null)输出的默认值
+ 	//escapeXml: 是否将转义字符转义,比如<h1></h1>在true的时候输出原文,在false的时候当成标签
+%>
+```
+
+* value详解:
+  * 可以是字符串,也可以是EL表达式
+
+### 2. c:set设置
+
+```jsp
+<c:set property="" scope="" target="" value="" var=""></c:set>
+<%
+	//它的全部属性一览
+%>
+```
+
+* 用法一: 给域中设置属性
+
+  ```jsp
+  <c:set var="username" value="lei1" scope="request"></c:set>
+  <c:set var="stu" value="<%=stu %>" scope="page"></c:set>
+  <%
+  	//var: 键名
+  	//value: 值
+  	//scope: 域对象名,取值是Scope前面那串,page,request,session,application
+  %>
+  ```
+
+* 用法二: 修改对象的某个属性值
+
+  ```jsp
+  <c:set property="" target="" value=""></c:set>
+  <%
+  	//property: 要修改的属性名
+  	//value: 修改后的值
+  	//target: 修改哪个对象
+  %>
+  <--实例-->
+  <%
+      request.setAttribute("user","lei"); 
+  	Student stu = new Student("tomcat");
+  %>
+  <c:set property="username" target="<%=stu %>" value="apache"></c:set>
+      <%
+      //target里写jsp表达式或el表达式,取出对象就行
+      %>
+  ```
+
+  
+
+### 3. c:remove移除
+
+```jsp
+<c:remove var="username" scope="requset"/>
+var: 属性的key
+scope: 哪个域,不指定就把所有域中相关属性全移除
+```
+
+### 4. c:if判断
+
+```jsp
+<c:if test="${5 > 6}" scope="" var="">
+    <h1>ooo</h1>
+	<%--
+    	test中传入el表达式的判断,若为true就执行标签体的内容
+    	记得el中的字符串可以直接==比较
+    --%>
+    <%
+    	//scope: 把判断结果放在域中
+    	//var: 指定key
+    %>
+</c:if>
+```
+
+### 5. c:choose,c:when,c:otherwise一套组合
+
+类似于switch-case
+
+```jsp
+<c:choose>
+	<c:when test="${stu.age > 18 }"><h2>shenfenzheng1</h2></c:when>
+	<c:otherwise><h2>xx</h2></c:otherwise>
+</c:choose>
+<%
+	when相当于case,在test里写
+    otherwise相当于default
+%>
+```
+
+### 6. c:forEach遍历
+
+```jsp
+<c:forEach begin="" end="" items="" step="" var="" varStatus=""></c:forEach>
+<--属性一览-->
+```
+
+* 说属性:
+
+  ```jsp
+  <%
+  	//标签体: 就是循环体
+  	//begin: 指定遍历的开始位置
+  	//end: 指定结束遍历的位置
+  	//items: 要遍历的东西
+  	//step: 步长
+  	//var: 指定遍历的当前条目的变量名(增强for左边的部分)
+  	//varStatus: 遍历状态,封装了当前遍历的所有状态信息
+  %>
+  ```
+
+  
+
+* 示例1: 顺序遍历数字
+
+  ```jsp
+  <c:forEach begin="0" end="10"  var="num" step="2" >
+      <%
+      	//var放在page域中,在循环体里直接EL获取
+      	//包含end值
+      %>
+  		${num }<br/>
+  	</c:forEach>
+  ```
+
+* 示例2: 遍历集合
+
+  ```jsp
+  	<c:forEach var="stu" items="<%=list %>" ><!-- 也能写el表达式-->
+  		${stu.username }--->${stu.age }
+  	</c:forEach>
+  <%
+  	//可以指定begin值,0表示全部遍历,1表示第二个开始...
+  	//自然也可以指定end值,会包含end对应值
+  %>
+  ```
+
+* 示例3: varStatus
+
+  ```jsp
+  <c:forEach var="stu" items="<%=list %>" varStatus="status">
+  	<%-- 将当前遍历状态的详细信息封装到对象中,对象名就是属性值 --%>
+      <!-- 该对象的类型为 LoopTagSupport-->
+  	${status }<br/>
+  </c:forEach>
+  O:
+  javax.servlet.jsp.jstl.core.LoopTagSupport$1Status@71397b5a
+  javax.servlet.jsp.jstl.core.LoopTagSupport$1Status@71397b5a
+  javax.servlet.jsp.jstl.core.LoopTagSupport$1Status@71397b5a
+  ```
+
+  * LoopTagSupport类
+
+    其属性:
+
+    
+
+| 属性          | 值                               |
+| ------------- | -------------------------------- |
+| begin         | 循环指定的begin的值,没指定就为空 |
+| end           | 循环指定的end的值,没指定就为空   |
+| step          | 步长,默认为1                     |
+| count         | 当前遍历到第几个,1开始           |
+| index         | 元素在集合里的索引,0开始         |
+| last(boolean) | 是否最后一个                     |
+|               |                                  |
+
+### 7. c:url,c-redirect
+
+`c:url`改装自己的url
+
+如果绝对路径(绝对路径从项目开始)指定,uri会变成从项目开始
+
+```jsp
+<c:url context="" scope="" value="" var=""></c:url>
+<%
+	//value: 要改装的路径
+	//scope: 把改装后的返回值放到域中
+	//var: 放到域中的哪个key
+	//
+%>
+<c:url scope="request" value="/index.jsp" var="uri"></c:url>
+<%
+	//存的是 /JSTL2/index.jsp,但是刚开服务器的时候它后面带了一组cookie,不太懂
+%>
+```
+
+`c:redirect`重定向
+
+```jsp
+<c:redirect url="/index.jsp"></c:redirect>
+当场重定向,绝对路径从项目开始
+```
+
+
+
+## 四. 函数库
+
+这是在JSTL中定义的标准的**EL函数集**,是写在el表达式里的
+
+定义的函数基本都是对字符串的操作
+
+### 1. 导入函数库
+
+```jsp
+ <%@taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
+```
+
+### 2. 函数标签们
+
+* `fn:contains`和`fn:containsIgnoreCase`
+
+  * 参数: (源串,寻找的串)
+
+  * 返回值: boolean,表示是否含有
+
+  * 示例:
+
+    ```java
+    <%
+    	request.setAttribute("msg","1234");
+    %>
+    	${fn:contains(msg,"123") }
+    <%-- 直接用msg,毕竟在el中 --%>
+    ```
+
+* `fn:startsWith`和`fn:endsWith`
+
+  * 参数: (源串,寻找的串)
+
+  * 返回值: boolean,表示是否以开始/结束
+
+  * 示例:
+
+    ```jsp
+    ${fn:startsWith(msg,"123") }
+    ```
+
+* `fn:indexOf`
+
+  * 参数: (源串,寻找的串)
+  * 返回值: 索引,找不到就-1
+  * 示例: 不必了
+
+* `fn:replace`
+
+  * 参数: (源串,要替换的串,替换后的串)
+  * 返回值: 新的串
+  * 示例: 不必了
+
+* `fn:subString`
+
+  * 参数:(源串,开始,结束),左闭右开
+  * 返回值: 子串
+
+# 自定义标签
+
+## 一. 步骤
+
+1. 编写标签库的描述文件,描述标签的详细信息
+
+   库描述文件放在web-inf下
+
+2. 写标签的实现类SimpleTag
+
+3. 在页面引入
+
+![image-20200922203032999](../pics/jsp/image-20200922203032999.png)
+
+JSP标签体系,所有标签都是jspTag的实现类
+
+## 二. 第一步
+
+先在Web-Info下建个文件夹放配置(描述文件)
+
+建立长得像xml的tld,选择新建xml
+
+修改后缀名为xxx.tld,点击next
+
+选中第二项,next再选中第二项(Select XML catalog entry)
+
+![image-20200922203722684](../pics/jsp/image-20200922203722684.png)
+
+找这个模板
+
+next,删掉j2ee前缀(设为空)
+
+**好了**
+
+## 三. 第二步
+
+### 1. 看看结构
+
+* 根标签
+
+```xml
+<taglib version="2.0" xmlns="http://java.sun.com/xml/ns/j2ee" xmlns:xml="http://www.w3.org/XML/1998/namespace" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee http://xmlns.jcp.org/xml/ns/j2ee/web-jsptaglibrary_2_0.xsd ">
+    
+    
+    <!-- taglib 根标签 -->
+    
+    
+</taglib>
+
+```
+
+* 模板给你的标签(在根目录下)
+
+  ```xml
+    <tlib-version>0.0</tlib-version>
+    <short-name>NMTOKEN</short-name>
+  <!--
+  	short-name:指定前缀
+  -->
+  ```
+
+* 你要自己写的根目录下配置:
+
+  ```xml
+  <uri></uri>
+  标签库唯一标识,域名/../..
+  ```
+
+* 定义标签
+
+  ```
+  tag
+  |----name
+  |----tag-class
+  |----body-content
+  |----attribute
+  ```
+
+  ```xml
+  <tag>
+    <!-- 定义标签 -->
+    	<name>hello</name>
+    	<!-- 标签实现类 -->
+    	<tag-class>com.at.tag.MyTag</tag-class>
+    	<!--
+    		body-content:取四个值
+    		empty: 一个空标签,没有标签体(自结束)
+    		JSP:可以传入jsp表达式,脚本片段,el和其他内容
+    		scriptless: 不可以传jsp表达式和jsp脚本片段,可以传el和其他内容
+    		tagdependent: 传入是啥就是啥,不解析
+    	 -->
+    	<body-content>empty</body-content>
+    	<attribute>
+    		...
+    	</attribute>
+    </tag>
+  ```
+
+* 定义属性
+
+  * 在attribute标签中
+
+    ```
+    attribute
+    |---------name
+    |---------required
+    |---------rtexprvalue
+    ```
+
+    ```xml
+    <attribute>
+      	<!-- 属性名 -->
+      		<name>msg</name>
+      	<!-- 是否必须 -->
+      		<required>true</required>
+      	<!-- runtime+expression,如果传入el,是否解析 -->
+      		<rtexprvalue>true</rtexprvalue>
+      	</attribute>
+    ```
+
+    
+
+
+
+### 2. 实现SimpleTag类
+
+要干两件事:
+
+* 重写doTag,其他随意
+  * 你能在setJspContext里获得pageContext,然后就能获得很多jsp隐含对象
+* 把属性的getter,setter按照bean的方式写在类中
+
+```java
+public class MyTag implements SimpleTag {
+    private String msg;
+	
+	
+
+	public String getMsg() {
+		return msg;
+	}
+
+	public void setMsg(String msg) {
+		this.msg = msg;
+	}
+
+	/**
+	 * 执行标签功能
+	 */
+	@Override
+	public void doTag() throws JspException, IOException {}
+	
+	/**
+	 * 获取父标签,只能是自定义标签
+	 */
+	@Override
+	public JspTag getParent() {}
+
+	/**
+	 * 设置jspBody: 标签体内容
+	 */
+	@Override
+	public void setJspBody(JspFragment arg0) {}
+
+	/**
+	 * 就是pageContext,服务器自动传入
+	 */
+	@Override
+	public void setJspContext(JspContext arg0) {}
+	
+	/**
+	 * 设置父标签
+	 */
+	@Override
+	public void setParent(JspTag arg0) {}
+
+}
+
+```
+
