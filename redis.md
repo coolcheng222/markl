@@ -86,27 +86,27 @@ redis是一个数据存储服务器,有五大数据类型
 
 #### 2.3 string类型
 
-| 命令              | 作用                       |
-| ----------------- | -------------------------- |
-| set/get           | 赋值/打印                  |
-| append k1 str     | 往后添加                   |
-| strlen k          | 获取长度                   |
-| incr              | 数字字符串,数字加一        |
-| decr              | 数字减一                   |
-| incrby k n        | 加n                        |
-| decrby k n        | 减n                        |
-| getrange k a [b]  | 返回字符串从索引a到b的内容 |
-| setrange k a 内容 | 范围内赋值(从a开始覆盖)    |
-| setex k 秒数 内容 | 带`expire`的初始化         |
-| setnx k 内容      | set if not exist           |
-| mset              | 多个初始化                 |
-| mget              | 获取多个变量的值           |
-|                   |                            |
-|                   |                            |
-|                   |                            |
-|                   |                            |
-|                   |                            |
-|                   |                            |
+| 命令               | 作用                                                   |
+| ------------------ | ------------------------------------------------------ |
+| set/get            | 赋值/打印                                              |
+| append k1 str      | 往后添加                                               |
+| strlen k           | 获取长度                                               |
+| incr               | 数字字符串,数字加一                                    |
+| decr               | 数字减一                                               |
+| incrby k n         | 加n                                                    |
+| decrby k n         | 减n                                                    |
+| getrange k a [b]   | 返回字符串从索引a到b的内容,-1为最后,0位开始<br/>闭区间 |
+| setrange k a 内容  | 范围内赋值(从a开始覆盖到内容长度结束)                  |
+| setex k 秒数 内容  | 带`expire`的初始化                                     |
+| setnx k 内容       | set if not exist                                       |
+| mset k1 v1 k2 v2   | 多个初始化                                             |
+| mget k1 k2 k3      | 获取多个变量的值                                       |
+| msetnx k1 v1 k2 v2 | 如果不存在就设置,只要其中一个存在,就弃用所有           |
+|                    |                                                        |
+|                    |                                                        |
+|                    |                                                        |
+|                    |                                                        |
+|                    |                                                        |
 
 #### 2.4 list类型
 

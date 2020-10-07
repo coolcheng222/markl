@@ -130,7 +130,9 @@ MVC的另一种逻辑
 
 Struts2(过时),SpringMVC
 
-## 二. 分页
+# 技术技巧
+
+## 一. 分页
 
 为了减轻数据库负担, 我们需要将显示分页,就像百度那样.
 
@@ -258,7 +260,7 @@ $("#gotopage").click(function(){
         ...
 ```
 
-## 五. 首页过Servlet
+## 二. 首页过Servlet
 
 首先修改默认welcome-file是行不通的,因为各种文件都会过`/`目录,会调用多次servlet
 
@@ -266,5 +268,176 @@ $("#gotopage").click(function(){
 
 ```jsp
 <jsp:forward page="..."></jsp:forward>
+```
+
+## 三. 用session记录登录登出状态
+
+将登录的用户保存在session中,方便资源共享
+
+```java
+
+HttpSession session = request.getSession();
+session.setAttribute("user", login);
+```
+
+## 四. 表单重复提交
+
+### 1. 表单重复提交的情况
+
+表单重复提交指多次提交相同内容的表单
+
+* 情况1:
+
+如果请求request不变(比如转发页面),只要刷新就会造成重复的请求/表单提交
+
+* 情况2:
+
+卡了一会(处理请求慢),用户点了好多下提交
+
+* 情况3:
+
+用户成功以后直接后退(从缓存中)再次提交
+
+### 2. 危害
+
+1. 数据库多次保存相同数据
+2. 安全问题,可能造成重复支付
+3. 服务器性能压力,因为http是无状态协议
+
+### 3. 对应解决方法
+
+情况1: 转发改成重定向,或者使用令牌机制
+
+情况2: 点击以后把按钮disable,并提交表单(通过javascript),或者使用令牌机制
+
+情况3: 通过令牌机制(token)
+
+所以令牌机制可以解决所有表单重复提交问题
+
+### 4. token机制
+
+每次提交表单,带上令牌,服务器验证口令,口令合法就处理,不合法就打回
+
+服务器和页面有一个相同的令牌就行,页面提交的时候带上
+
+* 具体操作:
+
+  * jsp: 生成uuid,并在表单提交
+
+    <span style="color:red">注意: 回退之后这个加载的是<b>缓存</b>,不会生成新的uuid不会过session,表单内容也不变</span>
+
+  ```jsp
+  <%
+  	//产生一个唯一不重复的令牌
+  	String uuid = UUID.randomUUID().toString();
+  	session.setAttribute("token",uuid);
+  %>
+  	<base href="http://localhost:8888<%=request.getContextPath() %>/">
+  	<form action="UserServlet" method="post">
+  	<input type="text" name="token" value="<%=uuid%>"/>
+  ```
+
+  * servlet: 对比request(表单)和session内的token是否一致,移除session的token
+
+    * 如果是情况3,表单会一直提交最初的内容,而第二次开始session的token就是null了
+
+      ```java
+      HttpSession session = request.getSession();
+      		String token = (String)session.getAttribute("token"); 
+      		//服务器从session取到的令牌
+      		String pageToken = request.getParameter("token");
+      
+      		session.removeAttribute("token");
+      		
+      		if(pageToken.equals(token)){
+      			String username = request.getParameter("username");
+      			response.sendRedirect(request.getContextPath() + "/success.jsp");
+      		}else {
+      			response.sendRedirect(request.getContextPath() + "/error.jsp");
+      		}
+      ```
+
+      
+
+## 五. 验证码
+
+### 1. 验证码
+
+验证码的作用就是防止多次恶意请求
+
+简单的流程:
+
+1. 页面显示验证码,发送表单时提交验证码
+2. 验证码正确则保存用户
+3. 验证码不正确就打回
+
+### 2. 机制
+
+和token机制的想法差不多
+
+> 在页面中生成验证码图片 -> 给session中保存验证码实际内容 -> 用户提交表单 -> 
+>
+> 取出session中的内容以及页面带来的内容(验证码)进行匹配 ->判断是否成功
+
+### 3. 来玩用java的工具生产验证码
+
+导入`kaptcha-2.3.2.jar`
+
+#### 3.1 小实验
+
+注意到jar包内有个自带的`com.google.code.kaptcha.servlet.KaptchaServlet`
+
+这是一个servlet,就尝试着去请求了一下,果然它返回给页面了一张验证码图片
+
+**<img src="../pics/Project/image-20201005215538883.png" alt="image-20201005215538883" style="zoom: 33%;" />**
+
+![image-20201005215629063](../pics/Project/image-20201005215629063.png) 
+
+#### 3.2 应用于页面
+
+利用img的src属性可以直接把验证码图片引入
+
+```jsp
+<img alt="ooo" src="<%=request.getContextPath() %>/KaptchaServlet">
+```
+
+#### 3.3 从session中取对应值
+
+Constants类中存储了它放在session中的key
+
+```java
+  public static final java.lang.String KAPTCHA_SESSION_KEY = "KAPTCHA_SESSION_KEY";
+```
+
+所以取对应值只要用这个字段就可以了
+
+> 注意: 图片生成需要时间,在这个时间里取session的值是不准的,如果可以,应当等待或者到别的页面取
+
+#### 3.4 配置生成图片的参数
+
+配置自己上网查
+
+配置的地方在web.xml的servlet下增加init
+
+```xml
+<init-param>
+  		<param-name>kaptcha.textproducer.char.length</param-name>
+  		<param-value>2</param-value>
+</init-param>
+```
+
+
+
+### 4. 点击图片显示新的验证码
+
+首先给img绑定点击监听,然后给img的src属性再次赋予Servlet路径(此处是/code.jpg)
+
+为了清除浏览器以为的重复请求缓存,在后面挂上一串随机数
+
+```javascript
+$("#codeImg").click(function(){
+	var url = "code.jpg?t=" + Math.random();
+	$(this).prop("src",url);
+})
 ```
 
