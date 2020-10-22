@@ -300,6 +300,8 @@ removeClass(value)
 
 对应innerHTML
 
+> text()与html(): 设置text时会把整体当成字符串,像"\<br/>"这种就不会解析成换行
+
 ```javascript
 html() //返回innerHTML
 html(str) //设置innerHTML

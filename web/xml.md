@@ -221,8 +221,10 @@ name.addAttribute(name,value);
 XMLWriter xw = new XMLWriter();
 //构造器可以传OutputStream/Writer,OutputFormat,或者两个都传
 //OutputFormat将输出格式化,拥有静态方法createCompactFormat()和createPrettyPrint(),创建两种不同的OutputFormat,分别对应压缩和美观(比如压缩css和美观css)
+ OutputFormat compactFormat = OutputFormat.createPrettyPrint();
 xw = new XMLWriter(new FileOutputStream(file),compactFormat); //可以是任意xml文件的流
 xw.write(read); //把我们修改的文档对象传进去
+/// Document read = saxReader.read(new File("src/main/resources/stu.xml"));
 
 xw.close(); // 是一个Writer,需要关流
 ```

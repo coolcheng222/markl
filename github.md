@@ -181,7 +181,7 @@ git reset --hard head~n #回退n步
 
 ```bash
 git diff 文件 #在工作区改后,未交暂存区时,显示改变
-git diff 历史版本 文件名 #两者比较
+git diff 历史版本(比如HEAD^^^) 文件名 #两者比较
 ```
 
 ----
@@ -342,7 +342,7 @@ git pull 别名 分支 #一步到位
 ```
 
 * __冲突的解决__:
-  * 推送不上去
+  * 不是最新版的远程库版本就推送不上去
   * 当先git pull拉取,就进入了merge状态
   * 之后用上面的冲突解决
   * 提交时不带文件名
@@ -357,9 +357,13 @@ git pull 别名 分支 #一步到位
 
 -----
 
+在家目录下使用.gitignore文件使git忽略一些文件
+
 ![image-20200415120743498](C:\Users\carrzhou\AppData\Roaming\Typora\typora-user-images\image-20200415120743498.png)
 
 ![image-20200415121045071](C:\Users\carrzhou\AppData\Roaming\Typora\typora-user-images\image-20200415121045071.png)
+
+然后在gitconfig加这个
 
 ![image-20200415121138389](C:\Users\carrzhou\AppData\Roaming\Typora\typora-user-images\image-20200415121138389.png)
 

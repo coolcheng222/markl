@@ -112,7 +112,7 @@ redis是一个数据存储服务器,有五大数据类型
 
 * 单值多value是list类型
 * 类似于栈
-* 注意索引是从0开始的
+* 注意索引是**从0开始**的
 * 输出顺序跟索引顺序一样
 
 | 命令                             | 作用                                        |
@@ -127,9 +127,21 @@ redis是一个数据存储服务器,有五大数据类型
 | lrem key n value                 | 删n个value                                  |
 | ltrim key a b                    | 截a到b范围内,并赋值回key                    |
 | rpoplpush 原列表 目标列表        | 从原目标的最后一个移到目标的顶端            |
-| lset key index value             | 对索引对应值赋值                            |
+| lset key index value             | 对索引对应值赋值(索引不能越界)              |
 | linsert key before/after 值1 值2 | 在值1前后插入值2                            |
 |                                  |                                             |
+
+**左:小索引,右:大索引**
+
+lpush/rpush:
+
+* lpush的内容依次放在最小索引1处
+* rpush的内容依次放在最大索引处
+
+lpop:
+
+* lpop从小索引处弹出
+* rpop从大索引处弹出
 
 #### 2.5 set类型
 
@@ -145,7 +157,7 @@ redis是一个数据存储服务器,有五大数据类型
 | srandmember key n            | 随机取出n个数                        |
 | spop key                     | 随机出栈                             |
 | smove key1 key2 在key1中的值 | 把key1某个值赋给key2(key1会少一个值) |
-|                              |                                      |
+| scard key                    | 获取元素数量                         |
 | sdiff  key1 key2             | 显示差集                             |
 | sinter                       | 交集                                 |
 | sunion                       | 并集                                 |
@@ -160,15 +172,15 @@ redis是一个数据存储服务器,有五大数据类型
 | --------------------------- | ------------------------------------------------------- |
 | hset key field value        | 使对象(key)指向/或__添加__ __一个__键(field)值(value)对 |
 | hget key field              | 从键中获得一个值(可以对多键的对象使用)                  |
-| hmget key field1 value1 ... | 设置对象(key)指向__多个__键(field)值(value)对           |
+| hmset key field1 value1 ... | 设置对象(key)指向__多个__键(field)值(value)对           |
 | hmget key field1...         | 从对象的多个键中获得多个值                              |
 | hgetall key                 | 获得所有键/值                                           |
 | hdel key field              | 从key中删除field                                        |
 | hlen                        | 返回键值对的数量                                        |
 | hexists key field           | 返回key里面有没有field                                  |
-| hkeys/hvals                 | 返回键们/值们                                           |
+| hkeys/hvals key             | 返回键们/值们                                           |
 | hincrby key field n         | key的field加上n                                         |
-| hincrbyfloat                | 加小数                                                  |
+| hincrbyfloat key field n    | 加小数                                                  |
 | hsetnx                      | 不存在则创建                                            |
 |                             |                                                         |
 
@@ -178,20 +190,21 @@ redis是一个数据存储服务器,有五大数据类型
 * set的内容是key对应value
 * zset内容是key对应score-value键值对
 
-| 命令                                           | 作用                                    |
-| ---------------------------------------------- | --------------------------------------- |
-| zadd key score1 v1 score2 ..                   | 创建/增加zset的key                      |
-| zrange key a b [withscores]                    | 显示索引a到b的值(加选项显示score)       |
-| zrangebyscore key s1 s2[ withscores] [limit n] | 从socre>=s1到score=<s2显示value,分页n个 |
-| zrem k1 value                                  | 删除value对应的元素(score-value)        |
-| zcard key                                      | 统计value的数量                         |
-| zcount key s1 s2                               | 统计score在s1到s2的数量                 |
-| zrank key value                                | 获取对应索引                            |
-| zscore key value                               | 获取对应分数                            |
-| zrevrank key value                             | 逆序获取索引值                          |
-| zrevrange k a b                                | 逆序输出(依然是值在上)                  |
-| zrevrangebysocre                               | rangebyscore逆序                        |
-|                                                |                                         |
+| 命令                                                   | 作用                                    |
+| ------------------------------------------------------ | --------------------------------------- |
+| zadd key score1 v1 score2 ..                           | 创建/增加zset的key                      |
+| zrange key a b [withscores]                            | 显示索引a到b的值(加选项显示score)       |
+| zrangebyscore key s1 s2[ withscores] [limit offset n]  | 从socre>=s1到score=<s2显示value,分页n个 |
+| zrangebyscore key s1 (s2[ withscores] [limit offset n] | 同上,但不包含s2(同理s1也可以加这个)     |
+| zrem k1 value                                          | 删除value对应的元素(score-value)        |
+| zcard key                                              | 统计value的数量                         |
+| zcount key s1 s2                                       | 统计score在s1到s2的数量(包括边界)       |
+| zrank key value                                        | 获取对应索引                            |
+| zscore key value                                       | 获取对应分数                            |
+| zrevrank key value                                     | 逆序获取索引值                          |
+| zrevrange k a b                                        | 逆序输出(依然是值在上)                  |
+| zrevrangebysocre                                       | rangebyscore逆序                        |
+|                                                        |                                         |
 
 ---
 
@@ -217,6 +230,10 @@ redis是一个数据存储服务器,有五大数据类型
 4. tcp-backlog 队列综合=未完成三次握手+完成三次握手
 
 ![image-20200309173306452](C:\Users\carrzhou\AppData\Roaming\Typora\typora-user-images\image-20200309173306452.png)
+
+5. 设置密码
+
+   ![image-20201012153421095](pics/redis/image-20201012153421095.png)
 
 ----
 
@@ -251,23 +268,28 @@ redis是一个数据存储服务器,有五大数据类型
 
 * 在配置文件redis.conf中有一个__snapshotting模块__,其内容:
 
-  > 1. __save 秒钟 写操作次数 /''" ""__ :表示dump.rdb的更新条件是在时间内执行写操作次数
-  > 2. __stop-writes-on-bgsave-error__:不在乎数据不一致时可以置no
-  > 3. __rdbcompression__: 是否压缩存储快照
-  > 4. __rdbchecksum__:用redis使用CRC64进行数据校验
+  > 1. __save 秒钟 写操作次数__ :表示dump.rdb的更新条件是在时间内执行写操作次数
+  > 2. __save ""__ : disable所有save,把save注释掉也可以
+  > 3. __stop-writes-on-bgsave-error__:不在乎数据不一致时可以置no
+  > 4. __rdbcompression__: 是否压缩存储快照
+  > 5. __rdbchecksum__:用redis使用CRC64进行数据校验
 
 * 如何触发快照:
   * 配置文件中的默认快照设置
   * 用save(至关保存)命令或bgsave(后台异步快照操作)命令
-  * flushall也会产生,但是空的
+  * flushall,shutdown也会产生,但是空的
 
 * 如何恢复:
   * 将dump.rdb一道redis安装目录并启动服务
-  * config get dir查看dir
+    * config get dir查看dir
+
+![image-20201014133628379](pics/redis/image-20201014133628379.png)
 
 -------
 
 ### 2. AOF
+
+当aof和rdb共存,先加载aof
 
 * __是什么__:==以日志形式来记录每个写操作==,只许追加文件不许更改文件.redis启动之初会读取改文件重新构建数据.也即,redis重启的话根据日志文件的内容将写指令执行以完成数据的恢复工作.
 * 日志文件:appendonly.aof
@@ -317,6 +339,7 @@ redis对事务的支持是__部分支持__,不保证强一致性.
 > 5. `watch key [key...]`:监控一个(或多个key)key,若key被其他命令改动,事务将被打断.
 
 * MULTI后的指令是一个入队的过程,会返回`QUEUED`
+* ![image-20201019150315247](pics/redis/image-20201019150315247.png)
 
 ``` 
 MULTI
@@ -403,7 +426,7 @@ EXEC
   > * slave启动成功连接到master后会发送一个sync命令(同步命令)
   > * master接收到命令启动后台的存盘进程,同时收集所有接收到的用于修改数据集命令.master将整个数据文件传送到slave,以完成一次完全同步(全量复制)
   > * __全量复制__:slave服务在接收到数据库文件数据后,存盘并加载到内存中
-  > * __增量复制__:master继续将新手机的所有修改命令依次传到slave,完成同步.
+  > * __增量复制__:master继续将新收集的所有修改命令依次传到slave,完成同步.
   > * 只要重新连接master,全量复制将被自动执行
   
 * __缺点__:复制延时

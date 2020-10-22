@@ -1025,3 +1025,16 @@ DBUtils.closeQuietly(rs);
     ```
 
     
+
+## 拓展: QueryRunner批处理sql语句
+
+批处理就是batch方法
+
+![image-20201012145831025](pics/jdbc/image-20201012145831025.png)
+
+可以把同一个sql(主要是增删改)填充不同占位符,放在二维数组中
+
+
+
+返回一个影响行数的数组
+
