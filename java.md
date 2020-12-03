@@ -1852,7 +1852,7 @@ class Person{
 
 ### 3. 局部内部类
 
-* 在局部方法中调用外部方法的局部变量,外部这个局部变量必须是final的,或者jdk会帮你自动弄成final.
+* 在局部方法中调用外部方法的局部变量,外部这个**局部变量必须是final**的,或者jdk会帮你自动弄成final.
 
 
 
@@ -2533,7 +2533,7 @@ new Date(long date);//传入时间戳即可
 
 -----
 
-#### 2.3 java.text.SimpleDateFormate
+#### 2.3 java.text.SimpleDateFormat
 
 可格式化的日期,其操作分为__格式化__(日期(Date)->文本)和__解析__(反之)
 

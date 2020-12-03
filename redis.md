@@ -484,3 +484,128 @@ __去中心化__,一主二仆的基础上从机再加上从机,达到数据逐�
 
    * __旧master挂完回来以后,会成为新master的slave__
 
+## 六. Jedis连接
+
+```java
+public class RedisTest {
+    Jedis jedis = new Jedis("192.168.92.128",6379);
+    @Test
+    public void test1(){
+        System.out.println(jedis.ping());
+    }
+}
+```
+
+### 1. 展示
+
+```java
+public void test1(){
+        System.out.println(jedis.ping());
+//        System.out.println("\u8bf7\u5148\u767b\u5f55");
+        jedis.set("k10","v01");
+        String k1 = jedis.get("k1");
+        System.out.println(k1);
+        Set<String> keys = jedis.keys("*");
+        for (String key : keys) {
+            System.out.println(key);
+        }
+    }
+```
+
+### 2. 事务
+
+* 一般操作
+
+  ```java
+  public void test1(){
+  //        System.out.println(jedis.ping());
+          Transaction transaction = jedis.multi();
+          transaction.set("k4","v5");
+          transaction.set("k5","v6");
+  
+          transaction.discard();
+  //        transaction.exec();
+      }
+  ```
+
+* __加锁__(watch)
+
+  > watch命令就是标记一个键,如果标记了一个键,在提交事务前如果该键被别人改过那么事务就失败
+  >
+  > 这种情况在程序中通常可以重新再尝试一次
+
+```java
+public class TXTest {
+    Jedis jedis = new Jedis("192.168.92.128", 6379);
+
+    @Test
+    public void test1() {
+        TX tx = new TX();
+        boolean b = tx.transMethod();
+        System.out.println("main: " + b);
+    }
+}
+
+class TX {
+    public boolean transMethod() {
+        Jedis jedis = new Jedis("192.168.92.128", 6379);
+        int balance;
+        int debt;
+        int amtToSubtract = 10;
+
+        jedis.watch("balance");
+        try {
+            System.out.println("start:");
+            Thread.sleep(7000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        balance = Integer.parseInt(jedis.get("balance"));
+        if(balance < amtToSubtract){
+            jedis.unwatch();
+            System.out.println("modify");
+            return false;
+        }else{
+            System.out.println("************transaction");
+            Transaction transaction = jedis.multi();
+            transaction.decrBy("balance",amtToSubtract);
+            transaction.incrBy("debt",amtToSubtract);
+            transaction.exec();
+            balance = Integer.parseInt(jedis.get("balance"));
+            debt = Integer.parseInt(jedis.get("debt"));
+
+            System.out.println("******" + balance);
+            System.out.println("******" + debt);
+            return true;
+        }
+    }
+}
+```
+
+### 3. JedisPool(池)
+
+![image-20201029115008784](pics/redis/image-20201029115008784.png)
+
+```java
+public class JedisPoolUtil {
+    private JedisPoolUtil(){
+
+    }
+    private static JedisPool jedisPool = null;
+
+    public static JedisPool getJedisPoolInstance(){
+        if(jedisPool == null){
+            synchronized (JedisPoolUtil.class){
+                if(jedisPool == null){
+                    JedisPoolConfig config = new JedisPoolConfig();
+                    config.setMaxIdle(3);
+                    jedisPool = new JedisPool(config,"192.168.92.128",6379);
+                }
+            }
+        }
+        return jedisPool;
+    }
+}
+
+```
+

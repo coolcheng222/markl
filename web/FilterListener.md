@@ -405,3 +405,75 @@ ServletContext servletContext = filterConfig.getServletContext();
   * 获得context
 * session的se
   * 获取session
+
+## 三. 属性监听器
+
+### 1. 看看要实现的方法
+
+```java
+public void attributeRemoved(ServletRequestAttributeEvent srae)  {}
+public void attributeAdded(ServletRequestAttributeEvent srae)  {}
+public void attributeReplaced(ServletRequestAttributeEvent srae)  {}
+```
+
+就是增删改嘛
+
+
+
+### 2. 参数能获得什么
+
+* request
+
+  <img src="../pics/FilterListener/image-20201023143936014.png" alt="image-20201023143936014" style="zoom: 50%;" />
+
+  * 当前变化的属性名和值(getName/getValue)
+    * 移除的值是移除前的值
+    * 修改的值是修改前的值
+    * 想要新值,从request拿就行了
+  * Context和Request
+
+* 下面同理
+
+## 四. session钝化活化监听器/绑定监听器
+
+监听的是__session中的某个对象的钝化和活化__
+
+### 1. 监听的是啥
+
+监听器由**相应类**实现
+
+当**这个类的对象**跟着session钝化活化的时候,会执行相应方法
+
+或者这个类的对象跟session绑定/解绑(或者session失效)会执行相应方法
+
+```java
+ public void sessionDidActivate(HttpSessionEvent se)  { 
+         //活化
+    }
+
+	/**
+     * @see HttpSessionActivationListener#sessionWillPassivate(HttpSessionEvent)
+     */
+    public void sessionWillPassivate(HttpSessionEvent se)  { 
+         //钝化
+    }
+```
+
+参数se可以取session
+
+## 补充. 和项目共进退的容器监听器
+
+```xml
+<!-- needed for ContextLoaderListener -->
+	<context-param>
+		<param-name>contextConfigLocation</param-name>
+		<param-value>location</param-value>
+	</context-param>
+
+	<!-- Bootstraps the root web application context before servlet initialization -->
+	<listener>
+		<listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
+	</listener>
+```
+
+配置这个就行,要导入web包

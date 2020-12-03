@@ -1040,7 +1040,7 @@ Client: 外观接口的调用者
 * 完整的获取代理对象的方法展示:
 
   ```java
-     public Object getProxyInstance(){
+     public Object getProxyInstance(final Object target){
           return Proxy.newProxyInstance(target.getClass().getClassLoader(),
                   target.getClass().getInterfaces(),
                   new InvocationHandler() {
@@ -1061,7 +1061,7 @@ Client: 外观接口的调用者
 
 静态代理和JDK代理都要求目标对象实现一个接口,但是有时候目标对象啥都没实现,这个时候可以使用**目标对象的子类**来完成代理,称为cglib代理.
 
-它也可以归属到动态代理,因为是在内存中构建子类对象来实现目标对象工嗯呢该
+它也可以归属到动态代理,因为是在内存中构建子类对象来实现目标对象
 
 cglib是一个高性能__代码生成包,__它可以在运行期拓展java类与实现java接口,它广泛的被使用在AOP框架中.
 

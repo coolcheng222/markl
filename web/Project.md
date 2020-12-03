@@ -469,3 +469,23 @@ $("#codeImg").click(function(){
   * a.multiply(b)
   * a.divide(b)
   * a.doubleValue() 转回double
+
+## 七. gzip压缩页面
+
+如果请求头中表示`accept-encoding: gzip deflate sdch`(中的一个)就表示接受压缩形式的网页
+
+我们这里用gzip为例
+
+### 1. 服务器的反应
+
+服务器当意识到可以用gzip压缩的时候,就会把内容用gzip压缩并发给服务器
+
+响应头:`Content-Encoding: gzip`
+
+浏览器接收到以后解码并接受gzip内容
+
+> 但是对于二进制文件没有用
+
+### 2. 拓展
+
+在nginx笔记中记载着gzip的配置

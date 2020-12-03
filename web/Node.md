@@ -289,3 +289,161 @@ node在使用模块名字来引入模块时,它会首先在当前目录的node_m
 能往上一级到磁盘根目录
 
 如果到根目录还没有,就报错
+
+## 五. Buffer
+
+### 1. 做什么的
+
+`Buffer`的结构和数组很像,操作的方法也和数组类似
+
+原生的数组:
+
+1. 性能比较差
+2. 传统的数组存不了二进制文件
+
+Buffer:
+
+1. 结构上像数组,元素为16进制的两位数,0-255
+2. 实际上一个元素就是内存中的一个字节
+3. Buffer的内存不是通过JS分配的而是底层C++分配的
+
+
+
+### 2. 使用Buffer
+
+不需要导入模块,是node核心对象
+
+```javascript
+//将字符串保存到buffer中
+var buf = Buffer.from(str);
+//<Buffer 48 65 6c 6c 6f>
+
+
+```
+
+* 分配特定大小的buffer
+
+```javascript
+//Buffer构造函数已经过期了
+//创建一个指定大小的buffer
+// var buf2 = new Buffer(10);
+var buf2 = Buffer.alloc(10);//10个字节,全0
+var buf3 = Buffer.allocUnsafe(10); // 创建10个字节的空间,不清空原来的数据,性能好
+console.log(buf2);
+buf2[0] = 0x88;
+```
+
+* buffer是对底层内存的直接操作,如果溢出就直接往后操作,不会改变buffer大小
+* 如果存的东西大于255,就截断到8位
+* 数字在控制台输出是10进制,可以用`toString(16)`输出16进制
+
+## 六. fs文件系统
+
+作用就是操作 `系统中的文件,类似IO
+
+### 1. 引入fs模块
+
+```javascript
+var fs = require("fs");
+console.log(fs)
+```
+
+### 2. 同步和异步
+
+fs模块中所有的操作都有两种形式可供选择__同步__和__异步__
+
+同步文件系统会**阻塞程序**的执行,不完成就不往下执行代码
+
+异步**不会阻塞程序**执行,而是在操作完成时通过回调函数将结果返回
+
+* 对应的方法的两种形式:
+  * `fs.xxxx(....,callback)`: 异步版本
+  * `fs.xxxxSync(....)`: 同步版本
+
+### 3. 同步 打开-写-关闭文件流程
+
+#### 3.1 打开文件(同步)
+
+```javascript
+fs.openSync(path,flags[,mode]);
+//path: 路径
+//flags: 像"r","w"这种,标识打开方式
+//mode: 设置权限,一般不写
+//返回值: 文件的编号,Number类型
+```
+
+#### 3.2 写(同步)
+
+```javascript
+fs.writeSync(fd,string[,position][,encoding])
+//fd: 文件的编号
+//string: 要写入的字符串
+//position: 起始位置,可以不写
+//encoding: 编码,可以不写
+```
+
+#### 3.3 关闭(同步)
+
+```javascript
+fs.closeSync(fd);
+```
+
+
+
+#### 3.4 总览
+
+```javascript
+var number = fs.openSync("hello.txt","w");
+fs.writeSync(number,"hahah");
+fs.closeSync(number);
+```
+
+### 4. 异步文件操作
+
+> 异步方法不可能有返回值,只可能用回调函数操作
+>
+> 回调函数的操作和后面的代买没有执行顺序
+>
+> 错误优先,如果可能有error,则一定是回调函数第一个参数
+
+#### 4.1 open
+
+```javascript
+fs.open("hello.txt","w",function(){
+  	//回调函数的参数:
+    // error: 没有错误就为null
+    // fd: 文件描述符(number)
+    console.log(arguments);
+})
+```
+
+* error示例
+
+  ```javascript
+  '0': [Error: ENOENT: no such file or directory, open 'E:\codes\webs\Node1\filesystem\hello333.txt'] {
+      errno: -4058,
+      code: 'ENOENT',
+      syscall: 'open',
+      path: 'E:\\codes\\webs\\Node1\\filesystem\\hello333.txt'
+    }
+  ```
+
+  
+
+#### 4.2 write
+
+```javascript
+//在open的回调函数中运行
+fs.write(fd,"aaa",function(err,writen,string){});
+//err: 错误
+//writen: 写入长度
+//string: 写入内容
+```
+
+#### 4.3 close
+
+```javascript
+
+fs.close(fd,function(err){})
+```
+

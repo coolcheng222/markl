@@ -1,9 +1,13 @@
 # 高级Mysql
 [TOC]
 
+
+
 * __逻辑架构__:
 
-  > 连接层-服务层-引擎层-存储层
+* ![image-20201124170609699](pics/highermysql/image-20201124170609699.png)
+
+  > 连接层-[服务层-引擎层-存储层]
 
 ![image-20200228150218852](C:\Users\carrzhou\AppData\Roaming\Typora\typora-user-images\image-20200228150218852.png)
 
@@ -67,6 +71,21 @@
 >
 > __复合索引__:即一个索引包含多个列
 
+### 补充: 需要创建和不应创建的情况
+
+* 需要创建:
+  * 主键自动建立
+  * 频繁作为查询条件
+  * 外键应当建立索引
+  * 要排序的字段
+  * 统计或者分组的字段
+* 不应创建
+  * where条件里用不到的字段
+  * 频繁更新(增删改)的字段/表
+  * 表记录太少
+  * 数据重复且分布平均的字段
+  * ![image-20201201114046658](pics/highermysql/image-20201201114046658.png)
+
 ### 3. 语法
 
 ```sql
@@ -114,6 +133,8 @@ show index from 表\G;#查看
 > 服务器的硬件性能
 
 ### 1. 是什么
+
+使用Explain查看查询执行计划
 
 * __作用__:使用`explain`关键字可以模拟优化器执行SQL查询语句,从而知道Mysql如何处理你的SQL语句的._分析_你的查询语句或者是表结构的__性能瓶颈__.
 
@@ -635,3 +656,10 @@ show status like 'innodb_row_lock';
   * master可以有多个slave
 
 * __最大问题__:延时
+
+## 附: mysql在linux下的相关路径
+
+* 数据库存放路径`/var/lib/mysql`
+* 配置文件目录`/usr/share/mysql`(my-default)
+* 命令目录`/usr/bin`
+* 启停相关脚本`/etc/init.d/mysql`
