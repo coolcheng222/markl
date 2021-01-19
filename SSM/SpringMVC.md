@@ -1811,3 +1811,329 @@ void afterCompletion(HttpServletRequest request, HttpServletResponse response, O
 }
 ```
 
+> 当preHandle没有放行,则后面流程都失败
+>
+> 若放行,就算目标方法出现异常,postHandle不执行,但afterCompletion仍然执行
+
+### 2. 单拦截器使用
+
+1. 写一个实现HandlerInterceptor接口的拦截器
+
+```java
+public class MyFirstInterceptor implements HandlerInterceptor{
+	@Override
+	public void afterCompletion(HttpServletRequest arg0, HttpServletResponse arg1, Object arg2, Exception arg3)
+			throws Exception {
+		System.out.println("afterCompletion");
+	}
+	@Override
+	public void postHandle(HttpServletRequest arg0, HttpServletResponse arg1, Object arg2, ModelAndView arg3)
+			throws Exception {
+		System.out.println("postHandle");
+	}
+
+	@Override
+	public boolean preHandle(HttpServletRequest arg0, HttpServletResponse arg1, Object arg2) throws Exception {
+		System.out.println("preHandle");
+		return true;
+	}
+
+}
+```
+
+2. 在spring里注册拦截器,配置拦截器拦截哪些请求
+
+   * 先写个大标签`<mvc:interceptors>`,然后在里面使用bean或者mvc:interceptor注册拦截器
+
+     * 直接用`bean`: 使用bean标签注册,拦截所有请求
+     * `mvc: interceptor`中使用bean和mvc:mapping标签,用path属性指定拦截路径
+
+     ```xml
+     <mvc:interceptors>
+     		<mvc:interceptor>
+     			<bean class="com.at.interceptor.MyFirstInterceptor"></bean>
+     			<mvc:mapping path="/handle01"/>
+     		</mvc:interceptor>
+     	</mvc:interceptors>
+     ```
+
+### 3. 配置好几个拦截器
+
+在mvc:interceptors中多配置几个即可
+
+顺序跟配置顺序有关,进去从上到下,出来反之,跟Filter差不多,afterCompletion和postHandle顺序一样
+
+* 不放行: 任一不放行,都会导致请求方法和post不执行,但是已经放行的会执它的afterCompletion
+
+### 4. 流程源码
+
+在doDispatch中,有拦截器的执行:
+
+* **获取拦截器链:** 在dodispatch获取handler的时候就获取了
+
+  ```java
+  mappedHandler = getHandler(processedRequest);
+  //返回的是handler执行chain,内部包含目标方法和拦截器
+  ```
+
+  
+
+* **preHandle:** 就在执行方法的代码块上方有preHandle拦截器的执行
+
+  ```java
+  if (!mappedHandler.applyPreHandle(processedRequest, response)) {
+  	return; // 要是不放行就直接结束
+  }
+  
+  try {
+  	// Actually invoke the handler.
+  	mv = ha.handle(processedRequest, response, mappedHandler.getHandler());
+  }
+  ```
+
+  applyPreHandle:
+
+  * 逐个遍历拦截器并执行preHandle
+  * 如果有拦截器不放行,就直接**倒序**触发之前放行的拦截器的AfterCompletion,并返回false
+  * 如果所有拦截器放行,返回true
+
+  ```java
+  boolean applyPreHandle(HttpServletRequest request, HttpServletResponse response) throws Exception {
+  		if (getInterceptors() != null) { // 获取拦截器
+  			for (int i = 0; i < getInterceptors().length; i++) {//按顺序遍历拦截器
+  				HandlerInterceptor interceptor = getInterceptors()[i];
+  				if (!interceptor.preHandle(request, response, this.handler)) {
+                      //就调用preHandle方法,不让放行就直接触发afterCompletion
+  					triggerAfterCompletion(request, response, null);
+  					return false;
+  				}
+  				this.interceptorIndex = i;//记录已经放行的最后一个索引
+  			}
+  		}
+  		return true;
+  	}
+  ```
+
+* __posthandle__: 在doDispatch中目标方法执行后,有执行post方法的语句
+
+  ```java
+  mappedHandler.applyPostHandle(processedRequest, response, mv);
+  ```
+
+  ```java
+  //相当好懂
+  void applyPostHandle(HttpServletRequest request, HttpServletResponse response, ModelAndView mv) throws Exception {
+  		if (getInterceptors() == null) {
+  			return;
+  		}
+  		for (int i = getInterceptors().length - 1; i >= 0; i--) {//倒序执行
+  			HandlerInterceptor interceptor = getInterceptors()[i];
+  			interceptor.postHandle(request, response, this.handler, mv);
+  		}
+  	}
+  ```
+
+* 目标方法出异常: 目标方法在try块中,出异常会直接**来到页面渲染**而不执行post
+
+* **AfterCompletion:** 从最后一个放行的拦截器倒序往前执行
+
+  * 如果在页面渲染中出现任何异常,都会直接触发AfterCompletion
+  * 或者在页面渲染的render等执行完后,若mappedHandler不为空就会触发AfterCompletion
+
+
+### 5. 和Filter的对比
+
+1. 拦截器可以使用Spring的其他组件,Filter不能Autowired
+2. 拦截器不能脱离Spring,但Filter可以
+
+## 十五. 国际化+
+
+### 1. 获取locale/localeResolver
+
+Springmvc中区域信息是由区域信息解析器(localeResolver)得到的(底层直接request.getLocale)
+
+而在请求方法中传入Locale即可获得区域信息
+
+LocaleResolver有setLocale可以修改Locale信息
+
+
+
+自定义LocaleResolver中使用id="localeResolver"配置即可
+
+* `SessionLocaleResolver`可以设置locale信息,从session中解析,键为`SessionLocaleResolver.class.getName()+".LOCALE"`
+* `CookieLocaleResolver`从cookie中解析
+
+### 2. 获取配置文件中的信息
+
+通过已经配置好的MessageSource来获取properties的信息,使用getMessage方法
+
+getMessage(key,占位符数组/null,locale)
+
+### 3. 专门Locale拦截器
+
+`LocaleChangeInterceptor`直接拦截,从请求参数中获取一个值(locale键)作为request的Locale,然后就可以在Controller里放进session
+
+## 十六. 异常处理
+
+SpringMVC通过HandlerExceptionResolver处理程序异常
+
+默认拥有的处理异常解析器:
+
+> ExceptionHandlerExceptionResolver(annotation-driven) --------@ExceptionHandler
+>
+> ResponseStatusExceptionResolver  -----------@ResponseStatus
+>
+> DefaultHandlerExceptionResolver -------------@SpringMVC自带异常
+
+### 1. 默认请求方法异常
+
+当请求方法出现异常,会执行finally,然后catch异常,赋值给dispatchException并传给渲染视图的processDispatchResult
+
+进方法首先判断异常
+
+当异常不为null时,它首先判断是不是ModelAndViewDefiningException,
+
+如果不是,就先来拿到目标方法,然后调用processHandlerException处理异常
+
+在其中遍历异常解析器,如果都不能处理catch的异常,那抛出去触发AfterCompletion,由tomcat处理并返回一个错误页面
+
+### 2. @ExceptionHandler
+
+@ExceptionHandler可以写在方法上,该方法作为特地处理这些异常的方法
+
+对当前Controller类中的方法有用
+
+* 参数: value Class数组,标明处理的异常
+* 将异常信息作为参数传递
+
+```java
+@ExceptionHandler(value= {ArithmeticException.class})
+	public String handleException01(Exception exception) {
+		return "success"; //返回值的处理和普通请求方法一样
+	}
+```
+
+* 有多个时,精确优先
+
+### 3. 全局ExceptionHandler
+
+1. 写一个类专门作为处理异常方法的集中
+2. 在这个类上加注解`@ControllerAdvice`而不是`@Controller`
+
+```java
+@ControllerAdvice
+public class MyJizhongException {
+	@ExceptionHandler(value= {ArithmeticException.class})
+	public String handleException01() {
+		return "success";
+	}
+}
+```
+
+本类的ExceptionHandler优先于全局的,
+
+不同全局处理类之间按照字母表顺序处理
+
+### 4. @ResponseStatus处理自定义异常
+
+加在: 自定义异常的类上
+
+参数: 
+
+* reason: 原因,类似作为message的字符串
+* value: 响应码
+
+这样子springmvc就会自己处理异常,交给你错误页面,类似于这样
+
+![image-20201211201656074](../pics/SpringMVC/image-20201211201656074.png)
+
+优先级低于ExceptionHandler
+
+### 5. SpringMVC默认异常
+
+如果ExceptionHandler和ResponseStatus没有处理SpringMVC默认的异常比如_请求方法不允许_,就会由`DefaultHandlerExceptionResolver`处理
+
+### 4. SimpleMappingExceptionResolver通过配置来异常处理
+
+就是把 异常-页面 用配置的方法
+
+* 属性: exceptionMappings(Properties)
+  * key: 异常全类名
+  * value: 页面(可以经过视图解析器)
+* 属性: exceptionAttribute:
+  * 配置: 隐含模型中异常信息的键名,默认为`exception`
+
+## 十七. SpringMVC流程总结
+
+1. 所有请求由__前端控制器DispatcherServlet__的`doDispatch`进行处理
+2. 根据**HandlerMapping**中的映射信息找到处理当前请求的**方法执行链**
+3. 根据当前处理器找到处理器适配器**HandlerAdapter**
+4. 拦截器的**preHandler**执行
+5. 适配器执行**目标方法**
+   * ModelAttribute注解标注的方法提前运行
+   * 确定目标方法参数
+     * 有注解: 
+     * 没有注解: 是否制定类型参数,比如Model
+     * 如果是自定义类型,看隐含模型有没有,再看是否SessionAttributes标注的属性,如果不是就抛异常,都不是就利用反射new一个
+6. (正常则)执行**postHandle**方法
+7. 处理结果,视图解析.
+   * 使用**异常解析器**处理异常,返回**ModelAndView**
+   * 使用**render**进行渲染
+8. 执行**AfterCompletion**
+
+![image-20201211230826807](../pics/SpringMVC/image-20201211230826807.png)
+
+## 十八. 和Spring整合
+
+虽然SpringMVC本身就是Spring,但是我们还需要让两者的**分工进行明确**(配置文件分离)
+
+SpringMVC的配置文件就用来配置 与网站转发逻辑以及网站功能有关的东西(比如视图解析器,文件上传解析器,...)
+
+### 1. 方式1: 合并文件
+
+在主要的配置文件(就是配置DispatcherServlet时参数指定的那个)中,使用import标签导入另外的配置文件
+
+```xml
+<import resource="spring.xml" />
+```
+
+### 2. 方式2: Spring和SpringMVC分容器配置
+
+* 在DispatcherServlet中配置SpringMVC的配置文件
+* web.xml中配置ContextLoaderListener来启动Spring的配置文件
+* 此时SpringMVC是Spring的父容器,父容器能访问子容器的内容,但子容器不能用父容器的东西
+
+```xml
+<context-param>
+		<param-name>contextConfigLocation</param-name>
+		<param-value>classpath:Spring.xml</param-value>
+</context-param>
+
+	<!-- Bootstraps the root web application context before servlet initialization -->
+<listener>
+	<listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
+</listener>
+
+
+	<servlet>
+		<servlet-name>springDispatcherServlet</servlet-name>
+		<servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
+		<init-param>
+			<param-name>contextConfigLocation</param-name>
+			<param-value>classpath:applicationContext.xml</param-value>
+		</init-param>
+		<load-on-startup>1</load-on-startup>
+	</servlet>
+```
+
+希望Spring管理业务逻辑组件,SpringMVC管理控制器组件
+
+在`<context:component-scan>`中指定扫描的注解
+
+```java
+
+<context:component-scan base-package="xxx" use-default-filters="false">
+		<context:include-filter type="annotation" expression="java.lang.ModuleLayer.Controller"/>
+	</context:component-scan>
+```
+

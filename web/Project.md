@@ -489,3 +489,13 @@ $("#codeImg").click(function(){
 ### 2. 拓展
 
 在nginx笔记中记载着gzip的配置
+
+![image-20201224085100319](../pics/Project/image-20201224085100319.png)
+
+![image-20201224085113583](../pics/Project/image-20201224085113583.png)
+
+ 
+
+
+
+https://uims.jlu.edu.cn/ntms/action/select/select-lesson.do

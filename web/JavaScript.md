@@ -670,6 +670,8 @@ arr.splice(0,1,[1,2],3);
 
 ### 1. call和apply方法
 
+`getName.call(...);`
+
 call和apply都可以调用函数
 
 call和apply的: <u>第一个参数成为函数执行的this</u>

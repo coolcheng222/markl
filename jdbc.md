@@ -81,7 +81,7 @@ Connection conn = driver.connect(url,info);
 
     * ```java
       String url = "jdbc:mysql://localhost:3306/test1?useUnicode=true&characterEncoding=utf8";
-      //后面这串不加判错
+      //后面这串不加判错(mysql8.0+)
       ```
 
   * `info`: Properties是map的实现类,应当传入`user`和`password`
@@ -566,7 +566,7 @@ String sql = "insert into goods (name) values (?)";
 
 mysql默认关闭批处理,需要在url后面加上`rewriteBatchedStatements=true`
 
-太快了!
+~~太快了!~~
 
 ```java
 for (int i = 0; i < 20000; i++) {

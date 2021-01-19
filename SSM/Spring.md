@@ -703,7 +703,7 @@ public class Book {
 
 Spring中有一个接口称为__后置处理器__,可以在bean的初始化前后调用一些方法
 
-实现`BeanProcessor接口`需要实现的方法:
+实现`BeanPostProcessor接口`需要实现的方法:
 
 ```java
 @Override
@@ -1467,6 +1467,34 @@ public class CalculatorProxy {
   > 1. 只对容器中拿到的对象有效,并且只可用__接口__获取和查找,不可以用它本类
   >    * 用本类报了一堆错,记住"简单版"用的是动态代理,以接口为重
 
+```java
+@Aspect
+public class LogAspect {
+	@Pointcut("public int com..Calculator.div(int,int)")
+	public void haha1() {
+		
+	}
+	@Before("haha1()")
+	public void logStart() {
+		System.out.println("除法运行");
+	}
+	@After("haha1()")
+	public void logEnd() {
+		System.out.println("除法结束");
+	}
+	@AfterReturning("haha1()")
+	public void logReturn() {
+		System.out.println("除法返回");
+	}
+	@AfterThrowing("haha1()")
+	public void logException() {
+		System.out.println("除法异常,信息为: ");
+	}
+}
+```
+
+
+
 ### 2. 通知注解
 
 * 前置通知`@Before`: 在目标方法之前运行
@@ -1572,7 +1600,7 @@ __格式:__ 固定格式`execution(访问权限符 返回值类型 方法签名(
 * **正常运行**
   * @Before -- @After -- @AfterReturning
 * __出现异常__
-  * @Before -- @AfterThrowing --@After
+  * @Before -- @After --@AfterThrowing
 
 ### 5. 通知方法拿到目标方法的详细信息
 
