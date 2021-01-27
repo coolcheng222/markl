@@ -102,3 +102,129 @@ class Person{
     }
 ```
 
+## 三. 类型
+
+### 0. 字面量作为类型
+
+```javascript
+let a : 10; //a就是10
+let b : "a" | "b"; //b从两个值里选
+```
+
+
+
+### 1. js自带的基础类型
+
+```javascript
+let a:boolean = true;//布尔
+let n:number = 0x10;//0b111,0o11117,12345
+let name:string = "aaa";
+let name2 : string | boolean; // 联合类型
+```
+
+期待它隐式转换,就报错;比如赋值之类的
+
+* null类型和undefined类型
+
+  * 可以作为所有类型的子类型(可以给别的对象赋值,非严格模式下)
+
+  * 值固定
+
+    ```javascript
+    let nu:null = null;
+    ```
+
+    
+
+### 2. 数组和元组
+
+* 声明数组(固定类型)
+
+  ```javascript
+  //方式1: let 变量: 数据类型[] = [...];
+  let arr1:number[] = [10,20,30];
+  //方式2: 泛型写法
+  let arr2: Array<number> = [1,2,3];
+  ```
+
+* 元组: 让"数组"中有不同的类型且固定长度
+
+  ```javascript
+  let arr3:[string,number,boolean] = ['',1,true];//严格对应
+  ```
+
+### 3. 枚举
+
+```javascript
+enum Color{
+    red,
+    green,
+    blue = 10,
+}
+let color:Color = Color.red;//实际是number 0,后面一个一个递增
+Color(10);//返回"blue";
+```
+
+### 4. any/unknown和void和never
+
+any类型: 可以存任何类型,可作为数组的元素
+
+void: 空,可以接受null,undefined
+
+never: 不可以返回任何值,连空都不可以,可以在函数里单纯抛异常啥的
+
+unknown: 能接受任何类型,但是比any更严格,不能给已知类型的变量赋值;在类型检查typeof后才可以赋值
+
+### 5. object类型
+
+对象
+
+```javascript
+let a:object;//当然,这样没什么意义
+let b:{name:string};//钦定有一个name属性,且只能有name属性
+let c:{name:string,age?:number} // 钦定有name属性.age可以没有
+```
+
+* 部分要求
+
+  ```javascript
+  let d:{name:string,[propName:string]:any};//propName:string表示属性名应该是string,其他不管
+  //即只要有name,其他属性不管
+  ```
+
+* 限制函数结构
+
+  ```javascript
+  ;let e1:Function;
+  let e:(a:number,b:number)=>number; //限定函数对象参数和返回值的类型和数量
+  ```
+
+  
+
+### 6. 类型断言/泛型
+
+把unknown断言为指定类型
+
+```javascript
+s = e as string;
+```
+
+泛型
+
+```javascript
+s = <string>e;	
+```
+
+### 7. 类型或/类型与
+
+```typescript
+let e:string|number;//string或number
+let j:{name:string}&{age:int} //两者都要满足
+```
+
+### 8. 类型别名
+
+```typescript
+type myType = 1|2|3|4;//后面用myType就行
+```
+

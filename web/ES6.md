@@ -323,4 +323,259 @@ function chunwan(){
   var divArr = [...divs];
   ```
 
+
+## 九. Symbol类型
+
+类似于字符串的基本数据类型
+
+### 1. 特点
+
+1. 值是唯一的
+2. Symbol的值不能和其他数据进行运算
+3. Symbol定义的对象属性不能用for...in循环遍历,但可以用Reflect.ownKeys来获取对象的所有键名
+
+### 2. 使用
+
+```javascript
+//创建symbol
+//方式1
+let s = Symbol();
+//方式2
+let s2 = Symbol('我是symbol');//传入的参数只是描述作用的字符串(
+let s3 = Symbol('我是symbol');
+console.log(s2 == s3);//false
+
+//方式3
+let s4 = Symbol.for("我是symbol");//传入的参数是symbol的key
+let s5 = Symbol.for("我是symbol");
+console.log(s4 == s5);//true
+```
+
+### 3. 应用
+
+在Symbol出现之前,对象属性方法名只能是字符串
+
+而现在Symbol可以作为属性或方法的名字
+
+这样的属性/方法只能`Reflect.ownKeys`才能获取到
+
+```javascript
+let methods = {
+      up:Symbol('down'),
+       down:Symbol()
+}
+game[methods.up] = function(){
+     console.log("bbb");
+}
+game[methods.down] = function () {
+      console.log("ccc");
+}
+game[methods.down]();
+```
+
+### 4. Symbol的内置属性
+
+额,建议看文档
+
+* instanceof重载:
+
+![image-20210119155242774](../pics/ES6/image-20210119155242774.png)
+
+* concat是否展开(是整体作为元素合并,还是分开合并)
+
+  ![image-20210119155338953](../pics/ES6/image-20210119155338953.png)
+
+## 十. 迭代器和新循环
+
+Iterator是一种接口,只要部署Iterator接口就可以使用新的`for...of`循环
+
+内置实现iterator接口的类型:(所谓iterator接口就是一个属性)
+
+> Array,arguments,set,map,string,typedArray,nodeList
+
+### 1.for.of使用举例
+
+```javascript
+const arr = ["a","b","c"];
+for (const string of arr) {
+    console.log(string);
+}
+//对比for in,获取的都是属性名,对于数组就是0123
+```
+
+### 2. iterator
+
+iterator接口就是`Symbol.iterator属性`
+
+```javascript
+Symbol(Symbol.iterator): ƒ values()
+//可以直接获取
+let iterator = arr[Symbol.iterator]();
+```
+
+1. 创建一个对象(迭代器)指向数据结构的其实位置
+2. 然后对象不断调用next(),返回的内容有value属性和done属性(表明是否到最后的布尔值)
+
+## 十一. 生成器函数
+
+生成器的作用是推动**异步编程**
+
+之前异步的手段就是回调函数
+
+### 1. 声明调用方式
+
+`function *`
+
+```javascript
+function* gen(){
+            console.log("hello");
+}
+let res = gen();//返回一个迭代器,没有运行方法内部代码
+console.log(res);
+//使用next调用
+res.next();//hello
+```
+
+* `yield`和next的配合
+
+  yield作为分隔符,作为next的参考依据
+
+  ```javascript
+  function* gen(){
+              //===========第一次next执行下面的代码
+              yield "aaa";
+              console.log("ccc");
+              //========第二次next执行下面的代码
+              yield "bbb";
+      		console.log("ddd");
+  }
+  ```
+
+* 直接使用for of
+
+  ```javascript
+  for(let v of gen()){
+  	console.log(v);//返回yield后面的标识,比如aaa;上面next()调用的返回值多一个done
+  }
+  ```
+
   
+
+### 2. 参数传递方式
+
+1. 在生成器函数直接传入参数:
+
+   ```javascript
+   
+   let strings = gen("AAA");
+   strings.next();//执行第一块
+   function* gen(arg){
+       console.log(arg);//有结果
+   }
+   ```
+
+2. next中传入参数: 作为yield语句的返回值
+
+### 3. 杜绝回调地狱
+
+   
+
+```javascript
+function * gen(){
+    yield one();
+    yield two();
+    yield three();
+}
+function one(){
+    setTime(()=>{
+        console.log(111);
+    },1000)
+};
+function two(){
+    setTime(()=>{
+        console.log(222);
+    },2000)
+};
+function three(){
+    setTime(()=>{
+        console.log(333);
+    },3000);
+};
+```
+
+## 十二. Promise
+
+从语法上来说Promise基本是一个构造函数,便于异步编程
+
+### 1. Promise对象
+
+* 创建: 内部传入一个函数,参数为resolve,reject
+
+  ```java
+  const p = new Promise(function(resolve,reject){
+             setTimeout(function(){
+             console.log("ooo");
+             let data = "aaa";//模拟获取数据
+                  //
+            resolve(data);//表示将promise对象的状态设置为"成功"
+            reject("bbb");//表示失败
+       },1000);
+  });
+  
+  ```
+
+`then方法`: 指定当调用resolve(成功),reject(失败)时会触发的方法
+
+```java
+p.then(function(value){
+    //value为成功获取的数据,resolve的参数
+},function(reason){
+    //reason为失败的原因,reject的参数
+})
+```
+
+### 2. 应用
+
+```javascript
+const p = new Promise(function (resolve, reject) {
+    fs.readFile("./iter.html",(err,data)=>{
+        if(err){
+            reject(err);
+        }else{
+            resolve(data);
+        }
+    })
+
+})
+p.then(function (value) {
+    console.log(value.toString());
+},function (reason) {
+    console.log(reason);
+})
+```
+
+### 3. then方法
+
+返回值是promise对象,跟状态当前对象的状态有关
+
+### 4. catch方法
+
+就是只指定错误方法的then
+
+## 十三. 集合
+
+### 1. 集合的整体特性
+
+1. 实现了迭代器,可用for...of
+
+2. 构造器可以空,或者传入任何可迭代对象
+
+3. 属性
+
+   `size`: 大小
+
+   `add()`: 增加元素
+
+   `delete(元素内容)`: 删除元素
+
+   `has(元素)`: 是否有元素

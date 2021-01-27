@@ -499,3 +499,15 @@ $("#codeImg").click(function(){
 
 
 https://uims.jlu.edu.cn/ntms/action/select/select-lesson.do
+
+## 八. ajax发送put请求却没有字段
+
+### 1. 问题情境
+
+ajax配合springMVC: ajax请求体中带有form-urlencode格式的请求参数,但是却无法封装进SpringMVC控制器的参数中
+
+实际上,SpringMVC无非是调用了request.getParameter,也就是说<u>request里面也没有对应的请求参数</u>
+
+### 2. 是Tomcat的问题
+
+Tomcat意识到是put请求,就不会封装请求体数据为map,只有post会这样封装
