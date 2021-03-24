@@ -132,6 +132,9 @@ public class MyConfig2 {
 
 可以标注在类和方法上,都表示满足条件(<u>所有Condition都返回true</u>)就加入容器
 
+* 标注在类上: 标注在含有@Component的类上,@Configuration也算,指明该类在包扫描时满足条件才可以加入容器,如果配置类没有满足则该配置类就不存在在容器中
+* 标在方法上: 标在带有@Bean注解的方法上,满足条件才能导入容器
+
 值为Condition(函数式接口)的class数组
 
 * Condition接口:
@@ -813,7 +816,7 @@ public Object invoke(MethodInvocation mi) throws Throwable {
 	}
 ```
 
-## 三. 声明式事务
+## 四. 声明式事务
 
 ### 1. 用法
 
@@ -1596,5 +1599,24 @@ public Callable<String> processUpload(final MultipartFile file) {
         }
     };
 }
+```
+
+#### 7.2  返回DeferredResult
+
+应用1无法处理,会交给应用2处理
+
+![image-20210128111841274](../pics/annotation/image-20210128111841274.png)
+
+```java
+@GetMapping("/quotes")
+@ResponseBody
+public DeferredResult<String> quotes() {
+    DeferredResult<String> deferredResult = new DeferredResult<String>();
+    // Save the deferredResult somewhere..
+    return deferredResult;
+}
+
+// From some other thread...
+deferredResult.setResult(result);
 ```
 

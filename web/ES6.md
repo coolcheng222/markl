@@ -413,7 +413,7 @@ Symbol(Symbol.iterator): ƒ values()
 let iterator = arr[Symbol.iterator]();
 ```
 
-1. 创建一个对象(迭代器)指向数据结构的其实位置
+1. 创建一个对象(迭代器)指向数据结构的起始位置
 2. 然后对象不断调用next(),返回的内容有value属性和done属性(表明是否到最后的布尔值)
 
 ## 十一. 生成器函数
@@ -579,3 +579,5 @@ p.then(function (value) {
    `delete(元素内容)`: 删除元素
 
    `has(元素)`: 是否有元素
+   
+4. 可以...展开

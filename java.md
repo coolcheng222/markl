@@ -4788,7 +4788,7 @@ Object tom = cons.newInstance("Tom", 12); //构造器实例化对象
 
 ### 5. ClassLoader(包含加载配置文件)
 
-调用Class实例的`getClassLoader()`方法可以获得类的__系统加载器__,系统加载器调用`getParent()`获取__拓展类加载器__,获取不到拓展类加载器的父亲__引导类加载器(C++编写)__
+调用Class实例的`getClassLoader()`方法可以获得类的__系统加载器__(Application),系统加载器调用`getParent()`获取__拓展类加载器__(extension),获取不到拓展类加载器的父亲__引导类加载器(C++编写)__(bootstrap)
 
 引导类加载器加载核心类库,无法加载自定义类
 

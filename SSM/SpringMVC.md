@@ -372,6 +372,11 @@ public class BookController {
 
 3. 如果不行就在转发的页面把isErrorPage设为true
 
+### 4. Rest风格注解
+
+1. `@RestController`: 标在控制器类上,即所有方法都返回ResponseBody
+2. `@PostMapping`: 类似的get,put都有,标在方法上表示一个RequestMapping限定请求方法
+
 ## 五. 请求处理
 
 ### 1. 获取请求参数
@@ -1079,6 +1084,8 @@ return handlerMethodToInvoke.invoke(handler, args);
 
 ### 3. 大致原理
 
+隐含模型放在ModelAndViewContainer中,在生成ModelAndView时会自动加入
+
 > 在运行处理方法接收到返回值后,首先无论传了什么回来都会先封装成ModelAndView再进行处理
 >
 > 然后用<u>processDispatchResult</u>进行**视图渲染(render)**
@@ -1763,9 +1770,9 @@ id必须为multipartResolver
 
    ```java
    @RequestMapping("/upload")
-   	public String upload(String username,
-   			@RequestParam("headerimg")MultipartFile file,
-   			Model model)
+   public String upload(String username,
+                        @RequestParam("headerimg")MultipartFile file,
+                        Model model)
    ```
 
 2. 在方法中使用MultipartFile操作上传的文件(流)

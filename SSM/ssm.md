@@ -53,31 +53,31 @@ Mybatis:
 
 ```xml
 <!-- needed for ContextLoaderListener -->
-	<context-param>
-		<param-name>contextConfigLocation</param-name>
-		<param-value>classpath:spring/applicationContext.xml</param-value>
-	</context-param>
+<context-param>
+    <param-name>contextConfigLocation</param-name>
+    <param-value>classpath:spring/applicationContext.xml</param-value>
+</context-param>
 
-	<!-- Bootstraps the root web application context before servlet initialization -->
-	<listener>
-		<listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
-	</listener>
-	<!-- needed for ContextLoaderListener -->
-	<!-- The front controller of this Spring Web application, responsible for handling all application requests -->
-	<servlet>
-		<servlet-name>springDispatcherServlet</servlet-name>
-		<servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
-		<init-param>
-			<param-name>contextConfigLocation</param-name>
-			<param-value>classpath:spring/applicationMVC.xml</param-value>
-		</init-param>
-		<load-on-startup>1</load-on-startup>
-	</servlet>
-	<!-- Map all requests to the DispatcherServlet for handling -->
-	<servlet-mapping>
-		<servlet-name>springDispatcherServlet</servlet-name>
-		<url-pattern>/</url-pattern>
-	</servlet-mapping>
+<!-- Bootstraps the root web application context before servlet initialization -->
+<listener>
+    <listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
+</listener>
+<!-- needed for ContextLoaderListener -->
+<!-- The front controller of this Spring Web application, responsible for handling all application requests -->
+<servlet>
+    <servlet-name>springDispatcherServlet</servlet-name>
+    <servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
+    <init-param>
+        <param-name>contextConfigLocation</param-name>
+        <param-value>classpath:spring/applicationMVC.xml</param-value>
+    </init-param>
+    <load-on-startup>1</load-on-startup>
+</servlet>
+<!-- Map all requests to the DispatcherServlet for handling -->
+<servlet-mapping>
+    <servlet-name>springDispatcherServlet</servlet-name>
+    <url-pattern>/</url-pattern>
+</servlet-mapping>
 	
 ```
 

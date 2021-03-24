@@ -20,7 +20,7 @@
   3. 列存储数据库
   4. 图关系数据库
 
-* `CAP`原理:ACIP的新变种
+* `CAP`原理:ACID的新变种
   1. C:Consistency强一致性
   2. A:acailability高可用性
   3. P:partition tolerance分区容错性
