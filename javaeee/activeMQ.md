@@ -343,3 +343,91 @@ messageProducer.setDeliveryMode(DeliveryMode.PERSISTENT);//持久,默认
 
 
 
+### 2. (重要)持久化Topic
+
+显然这种consumer先启动,producer后启动的方式不够持久化
+
+我们需要引入__发布订阅机制__
+
+#### 2.1 生产者/消费者代码修改
+
+* 生产者方面:
+
+  * connection.start放在producer创建和设置之后
+
+  * producer设置为DeliveryMode.PERSISTENT(持久化)
+
+    ```java
+    Connection connection =
+            factory.createConnection();
+    Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+    Topic topic1 = session.createTopic("topic1");
+    MessageProducer producer = session.createProducer(topic1);
+    producer.setDeliveryMode(DeliveryMode.PERSISTENT);
+    //放在这
+    connection.start();
+    ```
+
+* 消费者方面
+
+  * 设置客户端Id(即设置订阅者的标识)
+
+    ```java
+    Connection connection =
+            factory.createConnection();
+    connection.setClientID("z3");
+    ```
+
+  * 创建Topic以后,创建持久化的`TopicSubscriber`,替代consumer
+
+    ```java
+    Topic topic1 = session.createTopic("topic1");
+    TopicSubscriber subscriber = session.createDurableSubscriber(topic1, "我是备注...");
+    ```
+
+  * 直接connection.start();
+
+  * 用subscriber接收消息
+
+    ```java
+    Message message = subscriber.receive(); // 直接receive,和consumer逻辑一样
+    subscriber.setMessageListener(message1 -> {}); // 设置监听,逻辑一样
+    ```
+
+#### 2.2 订阅者
+
+订阅者一旦订阅就会以client id 为标识**持久**保存在activemq服务端
+
+订阅者订阅以后下线,再次上线时会收到被订阅者发送的消息
+
+![image-20210325110454025](../pics/activeMQ/image-20210325110454025.png)
+
+### 3. 事务
+
+事务在MQ中是偏向生产者的约束,在session创建时第一个参数设置布尔值来决定是否开启
+
+#### 2.1 生产者事务
+
+目的是如果发送多个消息途中出现异常,所有消息可以一起回滚
+
+```java
+Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+```
+
+`false`: 执行send以后直接进入到队列中
+
+* 需要将签收参数设置有效
+
+`true`: 先执行send再commit,才能将消息提交到队列中
+
+```java
+session.commit();
+session.close();
+// session.rollback();
+```
+
+#### 2.2 消费者事务
+
+如果不commit,消息虽然消费了,但依然会被回退到队列中
+
+所以开启了一定要commit

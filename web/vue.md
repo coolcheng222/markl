@@ -4,6 +4,30 @@
 
 [TOC]
 
+## 零. Vue-cli
+
+[vue-cli文档](https://cli.vuejs.org/zh/guide/)
+
+### 1. 安装
+
+```bash
+npm install -g @vue/cli
+npm install -g @vue/cli-service-global
+```
+
+### 2. 创建打包
+
+```bash
+import { createApp } from 'vue'
+import App from './App.vue'
+
+createApp(App).mount('#app')
+```
+
+1. 在项目目录下使用`vue serve(端口8080调试)` `vue build(构建)`即可运行
+2. 使用`vue create 名字`即可创建vue工程,或者使用`vue ui`图形化创建并操作
+3. 
+
 ## 一. 介绍
 
 Vue是前端**渐进式js框架**
@@ -1383,6 +1407,10 @@ app.component('my-component', {
 
   * 将要区分的插槽分别放进template标签中,并对template标签使用`v-slot:名字`来命名插槽
 
+  * 可以用v-slot:[]方式动态命名
+
+  * 缩写为`#`
+
     ```html
     <sloting>
         <template v-slot:head>
@@ -1441,3 +1469,76 @@ app.component('my-component', {
   ```
 
 > 当组件只有默认插槽时,可以将v-slot写在标签体
+
+### 5. v-slot的值
+
+v-slot其实并没有这么简单: 比如说我写了个`v-slot:default="abc"`,那底层就会声明一个这样的函数:
+
+```javascript
+function(abc){
+	//abc作为形式参数名存在,而使用的实参是由slot属性构成的对象
+    //在标签体中使用{{abc.item}}实际就是在函数中使用
+}
+```
+
+这样我们可以用__解构赋值__来对形参形式进行操作
+
+```html
+<todo-list v-slot="{ item }">
+    <!-- 结构赋值参数item -->
+  <i class="fas fa-check"></i>
+  <span class="green">{{ item }}</span>
+    <!-- 对应的,可以直接使用参数-->
+</todo-list>
+```
+
+或者其他的解构操作
+
+```html
+<todo-list v-slot="{ item: todo }"><!-- 将参数名改为todo -->
+<todo-list v-slot="{ item = 'Placeholder' }"> <!-- 默认值 -->
+```
+
+## 五. provide和inject
+
+我们遇到一个问题: 当组件树深度够高,我们想要向下传递数据就会遇到链式prop的问题,太麻烦
+
+<hr>
+
+所以vue提供了一个api来让父组件提供(provide)数据,子组件直接获得(inject)数据
+
+* 父组件provide:
+
+  * 在option中声明`provide(){}`方法,和data类似
+
+  * 返回值即provide出去的数据, key-value形式
+
+    ```javascript
+    provide(){
+      return {
+          user: this.msg
+      }
+    }
+    ```
+
+* 子组件inject
+
+  * 最简单形式: string数组指定接受的名字
+
+    ```javascript
+    inject: ['user']
+    ```
+
+### 2. 响应式
+
+默认provide/inject不带响应式,如果一定要响应式
+
+可以给provide赋值`响应式对象`或者`ref属性`
+
+比如:
+
+```javascript
+import {computed as com} from 'vue'
+user: com(()=>this.msg)
+```
+
