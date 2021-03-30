@@ -125,3 +125,91 @@ module.exports = {
   plugins:[new HtmlWebpackPlugin({template: "./src/index.html"})],
       //给打包的html添加模板
   ```
+
+### 3. 图片
+
+* 处理css图片: 
+
+图片使用url-loader处理(同时需要下载file-loader)
+
+```js
+module:{
+    rule:[
+        test:/\.(jpg|png|gif)/,
+        loader: 'url-loader',
+        options:{
+        	//图片小于8kb就会被base64处理
+        	limit: 8 * 1024,
+        	name: '[hash:10].[ext]' // hash取10位,用原来的拓展名
+        	//esModule: false
+        }
+    ]
+}
+```
+
+* 处理img图片: 换别的loader,并且需要在url-loader的module中设置esModule=false
+
+  ```js
+  {
+      test:/\.html/,
+          //专门用来引入img的loader
+      loader: 'html-loader'
+  }
+  ```
+
+
+## 三. devServer
+
+开发服务器,编写的时候自动打包并部署到服务器上
+
+只会在内存中打包,不会影响本地文件
+
+### 1. 配置
+
+```java
+devServer:{
+    contentBase: resolve(__dirname,'build'),
+    compress: true, //gzip压缩
+    port: 8999
+}
+```
+
+### 2. 启动
+
+```bash
+# 需要npm安装
+npx webpack-dev-server
+```
+
+## 附. 整合环境配置
+
+```js
+const {resolve} = require('path');
+let HtmlWebpack = require("html-webpack-plugin");
+module.exports = {
+    entry: './src/index.js',
+    output:{
+        filename: 'built.js',
+        path: resolve(__dirname,'build')
+    },
+    module:{
+        rules:[
+            {test: /\.less/,use:['style-loader','css-loader','less-loader']},
+            {test: /\.css/,use:['style-loader','css-loader']},
+            {test: /\.(jpg|png|gif)$/,loader:'url-loader',
+                options:{limit: 8 * 1024,name: '[hash:10].[ext]',esModule:false}},
+            {exclude: /\.(html|js|css|less|jpg|png|gif)/,loader: 'file-loader',options: {name:'[hash:10].[ext]'}}
+        ]
+    },
+    plugins:[new HtmlWebpack({template: './src/index.html'})],
+    devServer:{
+        contentBase: resolve(__dirname,'build'),
+        port: 8999,
+        compress: true,
+        open: true
+
+    }
+
+}
+```
+

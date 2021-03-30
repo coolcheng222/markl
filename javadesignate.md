@@ -886,9 +886,7 @@ Decorator拥有Component属性,解决一切烦恼.
 
 ### 3. 实例: 校-院-系 表
 
-我们要用Java实现一个校-院-系 体系
-
-#### 3.1 uml
+#### a
 
 <img src="pics/javadesignate/image-20200725200826231.png" alt="image-20200725200826231" style="zoom:33%;" />
 

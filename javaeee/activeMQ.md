@@ -431,3 +431,197 @@ session.close();
 如果不commit,消息虽然消费了,但依然会被回退到队列中
 
 所以开启了一定要commit
+
+### 4. 签收
+
+亲自签收才叫收到消息,就是签收的含义
+
+#### 4.1 非事务签收
+
+* 分类:
+
+  * 自动签收(默认)`Session.AUTO_ACKNOWLEDGE`
+
+  * 手动签收`Session.CLIENT_ACKNOWLEDGE`
+
+    * 需要对每一条消息反馈,不然不算消费过
+
+    * 调用message.acknowledge来签收
+
+      ```java
+      message.acknowledge();
+      ```
+
+      
+
+  * 允许重复消息`Session.DUPS_OK_ACKNOWLEDGE`
+
+#### 4.2 事务签收
+
+对于自动签收,不提交就意味着重复消费
+
+对于手动签收,提交就意味着签收,不提交就意味着回滚(会将签收状态一起回滚)
+
+所以综上,必须写commit或者rollback
+
+## 七. Broker
+
+Broker相当于一个ActiveMQ服务器实例
+
+实现了用代码形式启动MS并将MQ嵌入到Java代码中,节省资源
+
+### 1. 配置文件指定
+
+* 指定启动的配置文件
+
+  ```bash
+  ./activemq start xbean:file:/myactive/apache-activemq-5.15.9/conf/activemq02.xml
+  ```
+
+### 2. 嵌入式broker
+
+1. 添加依赖
+
+   ```xml
+   <dependency>
+       <groupId>com.fasterxml.jackson.core</groupId>
+       <artifactId>jackson-databind</artifactId>
+       <version>2.11.2</version>
+   </dependency>
+   ```
+
+2. 写代码启动
+
+   ```java
+   public class EmbbedBroker {
+       public static void main(String[] args) throws Exception {
+           BrokerService brokerService = new BrokerService();
+           brokerService.setUseJmx(true);
+           brokerService.addConnector("tcp://localhosy:61616");
+           brokerService.start();
+       }
+   }
+   ```
+
+# Spring整合
+
+## 一. 依赖
+
+* Active javaAPI
+
+  ```xml
+  <dependency>
+      <groupId>org.apache.activemq</groupId>
+      <artifactId>activemq-all</artifactId>
+      <version>5.15.9</version>
+  </dependency>
+  <dependency>
+      <groupId>org.apache.xbean</groupId>
+      <artifactId>xbean-spring</artifactId>
+      <version>3.16</version>
+  </dependency>
+  <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+      <version>2.11.2</version>
+  </dependency>
+  ```
+
+* 整合依赖
+
+  ```xml
+  <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-jms</artifactId>
+      <version>4.3.0.RELEASE</version>
+  </dependency>
+  <dependency>
+      <groupId>org.apache.activemq</groupId>
+      <artifactId>activemq-pool</artifactId>
+      <version>5.15.9</version>
+  </dependency>
+  ```
+
+## 二. 容器组件
+
+1. 连接池工厂
+
+```java
+@Bean
+public PooledConnectionFactory connectionFactory(){
+    PooledConnectionFactory fa = new PooledConnectionFactory();
+    fa.setConnectionFactory(new ActiveMQConnectionFactory(URL));
+    fa.setMaxConnections(100);
+    return fa;
+}
+```
+
+2. 配一个目的地Destination(细节可以自己写)
+
+   ```java
+   @Bean
+   public ActiveMQQueue queue(){
+       return new ActiveMQQueue("spring-queue");
+   }
+   ```
+
+3. jmsTemplate
+
+   ```java
+   @DependsOn({"connectionFactory","queue"})
+   @Bean
+   public JmsTemplate jmsTemplate(ConnectionFactory factory, ActiveMQQueue queue){
+       JmsTemplate jmsTemplate = new JmsTemplate();
+       jmsTemplate.setConnectionFactory(factory);
+       jmsTemplate.setDefaultDestination(queue); //将默认的destination注入
+       jmsTemplate.setMessageConverter(new SimpleMessageConverter());
+       return jmsTemplate;
+   }
+   
+   ```
+
+## 三. 生产者/消费者
+
+```java
+//生产者
+@Service
+public class SpringProducer {
+    @Autowired
+    private JmsTemplate jmsTemplate;//注入jmsTemplate
+
+    public static void main(String[] args) {
+        ApplicationContext ioc = new AnnotationConfigApplicationContext(MyConfiguration.class);
+        SpringProducer producer = ioc.getBean(SpringProducer.class);
+        producer.jmsTemplate.send(new MessageCreator() { 
+            // 利用jmsTemplate发送消息到queue
+            // 可以用参数指定不同destination
+            @Override
+            public Message createMessage(Session session) throws JMSException {
+                return session.createTextMessage("整合");
+            }
+        });
+    }
+}
+```
+
+## 四. 监听
+
+```java
+//注入DefaultMessageListenerContainer
+@DependsOn({"connectionFactory","queue"})
+@Bean
+public DefaultMessageListenerContainer container(ConnectionFactory factory, ActiveMQQueue queue){
+    DefaultMessageListenerContainer con = new DefaultMessageListenerContainer();
+    con.setConnectionFactory(factory);
+    con.setDestination(queue);
+    con.setMessageListener(new MessageListener() {
+        @Override
+        public void onMessage(Message message) {
+            if(message != null && message instanceof TextMessage){
+                System.out.println(((TextMessage) message).getText());
+            }
+        }
+    });
+}
+```
+

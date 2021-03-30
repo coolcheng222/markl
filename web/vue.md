@@ -1542,3 +1542,28 @@ import {computed as com} from 'vue'
 user: com(()=>this.msg)
 ```
 
+## 七. 动态组件+异步组件
+
+### 1. 动态组件 keep-alive
+
+这里解决的问题主要是组件切换会刷新组件的状态,我们希望组件保持它离开时候的样子
+
+`keep-alive`是一个标签,可以将想要保存状态的动态组件放进其标签体中
+
+```vue-html
+<!-- 失活的组件将会被缓存！-->
+<keep-alive>
+  <component :is="currentTabComponent"></component>
+</keep-alive>
+```
+
+注意: keep-alive会触发`deactived` `deactivate`d
+
+属性:
+
+* include/exclude: 有条件的缓存,可以用逗号分隔字符串,数组,正则表达式表示
+* max: 最大缓存组件数量,超过就把最早的排除
+
+### 2. 异步组件(懒加载)
+
+不理解,有需要可以看[文档](https://v3.cn.vuejs.org/guide/component-dynamic-async.html#%E5%BC%82%E6%AD%A5%E7%BB%84%E4%BB%B6)
