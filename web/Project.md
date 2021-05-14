@@ -513,3 +513,19 @@ ajax配合springMVC: ajax请求体中带有form-urlencode格式的请求参数,�
 ### 2. 是Tomcat的问题
 
 Tomcat意识到是put请求,就不会封装请求体数据为map,只有post会这样封装
+
+# 前后端分离技巧
+
+前后端分离大致理念就是前后端分开部署,前端向后端发请求,后端向前端返回json字符串
+
+但是这样会对传统项目理念造成巨大冲击
+
+### 1. 会话控制(以Shiro为例)
+
+跨域ajax请求是非常痛苦的, 特别是Cookie的携带成了一大问题. 所以会话安全控制逐渐放弃Cookie-session的形式
+
+所以一个理念是将用户信息token放在请求头中,保存在前端全局,发送时都带上
+
+后端根据token获取session
+
+尝试继承`DefaultWebSessionManager`

@@ -23,6 +23,12 @@
 
 开启debug模式, 会输出各种自动配置类生效情况等信息
 
+### 4. @MatrixVariable矩阵变量
+
+**是RequestMapping中url的新写法**
+
+以前我们将参数放在query字符串中,现在我们可以用<u>矩阵变量</u>(即*URL重写*)的格式写在url路径中
+
 ## 二. 新工具
 
 ### 1. lombok
@@ -44,4 +50,8 @@
 
    * 添加`@ToSrting`可以自动生成toString
    * `@NoArgsConstructor`,`@AllArgsConstructor`增加构造器
+
+### 
+
+
 

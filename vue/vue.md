@@ -1563,321 +1563,53 @@ this.$refs.唯一标识
 
 > 尽量避免使用
 
-# 组合式API
+# 响应式基础
 
-## 一. setup
 
-setup是组件的一个option,只会执行一次,其返回对象的属性和方法,组件可以直接使用
 
-setup是组合API的入口函数
+## 一. Proxy
 
-### 1. 实例
+Proxy是JS内建类,主要由`target`和`handler`组成 这两者是构造器的前两个参数
 
-对于数据count,我们想要其根据按钮的点击而增加,使用setup来实现
+`target`: 被代理对象
 
-```js
-setup(){
-    let count = 0;
-    function updateCount(){
-        count++
-    }
-    return {
-        count,
-        updateCount
-    }
-}
-```
+`handler`: 定义哪些行为会被拦截并且如何操作
 
-但是此时count并不是响应式的,不会随着方法的改变而变化
-
-解决:
-
-<u>引入ref</u>(一个函数,定义一个响应式数据),一般用于定义__基本数据类型__响应式数据
+<u>代理可以直接访问被代理对象的属性,方法</u>
 
 ```js
-import {ref} from "@vue/reactivity";
+var proxy = new Proxy({age:"123"},{});
+proxy.age // 123
 ```
 
-__响应式数据使用__
+handler的属性可以指定拦截哪些操作并执行什么样的方法
 
 ```js
-setup(){
-    const count = ref(0)
-    function updateCount(){
-        count.value++ // 操作值时需要用.value,html渲染时不需要
-    }
-    return {
-        count,
-        updateCount
-    }
-}
-```
-
-* reactive的基本使用
-  * reactive和ref类似,对于对象/复杂数据使用
-  * 返回的是该对象的__代理对象__,
-
-### 2. 
-
-# Vue-router
-
-## 一. 引入和使用
-
-一般来说需要引入vue-router依赖,但是vue-cli只需要安装插件即可
-
-### 1. 简单使用
-
-#### 1.1 html
-
-```html
-<div id="app">
-    <h1>Hello App!</h1>
-    <p>
-      <router-link to="/">Go to Home</router-link>
-      <router-link to="/about">Go to About</router-link>
-    </p>
-    <router-view></router-view>
-</div>
-```
-
-`router-link`: 内部渲染一个<a\>, 带有"正确的href"
-
-`router-view`: router指向的组件会渲染在这个标签里
-
-#### 1.2 JS
-
-使用一个数组,内部元素是指定路径和对应组建的对象(在插件中,这放在@/router/index.js中)
-
-```js
-const routes = [
-  { path: '/', component: Home }, // component: 对应的组件对象
-  { path: '/about', component: About },
-]
-```
-
-创建路由并配置(在插件中,这放在@/router/index.js中)
-
-```js
-// 3. 创建路由实例并传递 `routes` 配置
-// 你可以在这里输入更多的配置，但我们在这里
-// 暂时保持简单
-const router = VueRouter.createRouter({
-  // 4. 内部提供了 history 模式的实现。为了简单起见，我们在这里使用 hash 模式。
-  history: VueRouter.createWebHashHistory(),
-  routes, // `routes: routes` 的缩写
-})
-```
-
-app用上就行
-
-```js
-app.use(router)
-```
-
-#### 1.3 router和路由对象的使用方式
-
-在任意组件使用`this.$router`即可获得router对象,免去了导入的麻烦
-
-在组件中使用`this.$route`获取当前路由
-
-#### 1.4 使用js切换路由
-
-```js
-//使用router的push方法
-this.$router.push('/dashboard')
-```
-
-
-
-## 二. 路由动态参数
-
-我们可以向路由传递一些参数
-
-### 1. 基本步骤
-
-* 在配置路径时指定要传递的参数,称为__路径参数__
-
-  * 从`:`开始的标识符即为动态参数,比如`/user/:id`,`/user/:id/:password`,能传入参数id和id password; 与requestMapping的`{}`十分类似,动态段也不需要独占一级路径,类似`/user/a:id`也能正常支持
-
-* 在组件中访问参数
-
-  * 所有参数在组件中都作为`$route.params`的属性存在
-
-    ```html
-    <div>{{$route.params.id}}</div>
-    ```
-
-
-* 其他参数:
-  * 使用`$route.hash`可以访问url中以#开头的hash段
-  * 使用`$route.query`可以访问url中的query段(以键值对即对象的方式存在)
-
-### 2. 监控参数变化
-
-如果路由不变而参数改变,组件不会被重新渲染,可以对params进行监控变化(但其本身会响应式变化)
-
-### 3. 匹配所有路径
-
-我们可以用简单的参数来匹配所有路径`/:paths`
-
-## 三. 路由匹配
-
-动态路由匹配可以提供正则表达式作为匹配依据，以此可以根据参数内容区分不同的url
-
-- 实例：
-  - `/user/:id(\\d+)`匹配数字而`/user/:name`匹配其他内容 参数还可以匹配零级一级或多级路径
-- 实例
-  - `/:user+` 匹配一级或多级目录，$route.params.user表现形式为数组
-  - `/:user*` 匹配零级或多级目录
-  - `/:user?` 匹配零级或一级目录 多级路径匹配可以与正则共用
-- 实例
-  - `/:user(\\d+)+`匹配一级或多级有数字目录
-  - `/:id+/posts`可以这么用
-
-## 附. 获取对应名字+参数的url路径
-
-```
-// 给定 { path: '/:chapters*', name: 'chapters' },
-router.resolve({ name: 'chapters', params: { chapters: [] } }).href
-// 产生 /
-router.resolve({ name: 'chapters', params: { chapters: ['a', 'b'] } }).href
-// 产生 /a/b
-
-// 给定 { path: '/:chapters+', name: 'chapters' },
-router.resolve({ name: 'chapters', params: { chapters: [] } }).href
-// 抛出错误，因为 `chapters` 为空 
-```
-
-## 四. 嵌套路由
-
-官方教程的图搬过来,这是一个嵌套的组件结构,以及其对应的路由,我们如何来实现呢?
-
-```
-/user/johnny/profile                     /user/johnny/posts
-+------------------+                  +-----------------+
-| User             |                  | User            |
-| +--------------+ |                  | +-------------+ |
-| | Profile      | |  +------------>  | | Posts       | |
-| |              | |                  | |             | |
-| +--------------+ |                  | +-------------+ |
-+------------------+                  +-----------------+
-```
-
-* 根app:
-
-  依然是使用router-view标签
-
-* User组件: 使用router-view
-
-  ```html
-  <template>
-      <div>
-          <div>User</div>
-          <div>{{$route.params.id}}</div>
-          <router-view></router-view>
-      </div>
-  </template>
-  ```
-
-* 配置路径: children属性也是路由数组,可以继续嵌套
-
-  > 注意: 如果children的目录以`/`开头,则默认从根路径匹配,即`/posts`时渲染user内部的posts,但/user/id/posts不会匹配当前配置的任何路径
-
-  ```js
-  const routes = [
-    {
-      path: '/user/:id',
-      component: User,
-      children: [
-        {
-          // 当 /user/:id/profile 匹配成功 
-          // UserProfile 将被渲染到 User 的 <router-view> 内部
-          path: 'profile',
-          component: UserProfile,
-        },
-        {
-          // 当 /user/:id/posts 匹配成功
-          // UserPosts 将被渲染到 User 的 <router-view> 内部
-          path: 'posts',
-          component: UserPosts,
-        },
-      ],
-    },
-  ]
-  ```
-
-* 默认渲染
-
-  当没有指定children级的url时,可以指定一个默认的组件
-
-  ```json
-  {
-    path:'',
-    component: Home
+const handler = {
+  get(target, prop, receiver) {
+    track(target, prop)
+    return Reflect.get(...arguments)
+  },
+  set(target, key, value, receiver) {
+    trigger(target, key)
+    return Reflect.set(...arguments)
   }
-  ```
-
-## 五. 编程式导航
-
-就是用js代码来切换路由,之前那种点击切换的叫声明式,这种叫编程式
-
-所有导航方法都会返回一个Promise
-
-* 核心方法`this.$router.push`:
-
-### 1. push
-
-* 传入字符串url
-
-  ```java
-  // 字符串路径
-  router.push('/users/eduardo')
-  ```
-
-* 传入对象:
-
-  * 只有`path`属性,跟传入字符串url差不多
-
-    ```java
-    router.push({ path: '/users/eduardo' })
-    ```
-
-  * `name`属性,根据路由名称定位url,优先级大于path
-
-    ```js
-    this.$router.push({path:"/user/1/profile",name:'Home'});//Home生效
-    ```
-
-  * `query`: 对象,给传入的path或者name的url附加query串
-
-    ```js
-    this.$router.push({path:"/user/1/profile",query: {a: 'haha',b : 'haha'}});
-    ```
-
-  * `hash`: 对象,给url后面添加hash字符串,建议以#开头
-
-  * `params`: 给name的url中对应参数赋值; 若提供了path会忽略params
-
-### 2. replace
-
-和push就一样,只不过不会添加历史记录
-
-### 3. 横跨历史
-
-该方法采用一个整数作为参数，表示在历史堆栈中前进或后退多少步，类似于 `window.history.go(n)`。
-
-例子
-
+}
 ```
-// 向前移动一条记录，与 router.forward() 相同
-router.go(1)
 
-// 返回一条记录，与router.back() 相同
-router.go(-1)
+### 2. vue响应式的代理设置
 
-// 前进 3 条记录
-router.go(3)
-
-// 如果没有那么多记录，静默失败
-router.go(-100)
+```js
+const handler = {
+  get(target, prop, receiver) {
+    track(target, prop) //在getter中设置track
+    return Reflect.get(...arguments)
+  },
+  set(target, key, value, receiver) {
+    trigger(target, key) //在setter中设置trigger
+    return Reflect.set(...arguments)
+  }
 ```
+
+- 用跟踪 (track) 函数修改值
+- 用触发 (trigger) 函数更新为最新的值

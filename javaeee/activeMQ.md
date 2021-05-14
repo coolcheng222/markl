@@ -1,5 +1,7 @@
 # ActiveMQ
 
+[TOC]
+
 ## 一. MQ的意义
 
 ### 1. 宏观上
@@ -550,7 +552,7 @@ Broker相当于一个ActiveMQ服务器实例
 @Bean
 public PooledConnectionFactory connectionFactory(){
     PooledConnectionFactory fa = new PooledConnectionFactory();
-    fa.setConnectionFactory(new ActiveMQConnectionFactory(URL));
+    fa.setConnectionFactory(new ActiveMQConnectionFactory(URL)); // 在填URL
     fa.setMaxConnections(100);
     return fa;
 }
@@ -625,3 +627,193 @@ public DefaultMessageListenerContainer container(ConnectionFactory factory, Acti
 }
 ```
 
+## 五. springboot整合
+
+### 1. 启动器
+
+```xml
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-activemq</artifactId>
+    <version>2.1.5.RELEASE</version>
+</dependency>
+```
+
+### 2. yml配置
+
+```yml
+spring:
+  activemq:
+    broker-url: tcp://192.168.82.128:61616
+    user: admin
+    password: admin
+  jms:
+    pub-sub-domain: false # false: 队列; true= topic
+
+# 自己定义的队列名称
+myqueue: bootactive
+```
+
+### 3. 生产者放进容器
+
+```java
+@Component
+@EnableJms
+public class QueueProduce {
+    @Autowired
+    private JmsMessagingTemplate jmsMessagingTemplate;
+
+    @Autowired
+    private Queue queue;
+
+    public void produceMsg(){
+        jmsMessagingTemplate.convertAndSend("12345");
+    }
+}
+
+```
+
+直接Autowire就可以用
+
+* 间隔定投
+
+  ```java
+  @Scheduled(fixedDelay = 3000)
+  public void produceMsgScheduled(){
+      jmsMessagingTemplate.convertAndSend(queue,"12345");
+  }
+  ```
+
+### 4. 消费者
+
+使用@JmsListener("队列名")就行,然后把消息作为参数传递
+
+# 机制
+
+## 一. 传输协议
+
+默认使用TCP,但官网说NIO传输协议能提供更好的性能
+
+其他支持的还有如 TCP,NIO,UDP,SSL,Http,VM
+
+### 1. 配置
+
+配置位于`/conf/activemq.xml`
+
+默认使用的是第一个,即TCP协议,端口61616
+
+> openwire: active的默认消息协议
+
+```xml
+ <transportConnectors>
+     <!-- DOS protection, limit concurrent connections to 1000 and frame size to 100MB -->
+     <transportConnector name="openwire" uri="tcp://0.0.0.0:61616?maximumConnections=1000&amp;wireFormat.maxFrameSize=104857600"/>
+     <transportConnector name="amqp" uri="amqp://0.0.0.0:5672?maximumConnections=1000&amp;wireFormat.maxFrameSize=104857600"/>
+     <transportConnector name="stomp" uri="stomp://0.0.0.0:61613?maximumConnections=1000&amp;wireFormat.maxFrameSize=104857600"/>
+     <transportConnector name="mqtt" uri="mqtt://0.0.0.0:1883?maximumConnections=1000&amp;wireFormat.maxFrameSize=104857600"/>
+     <transportConnector name="ws" uri="ws://0.0.0.0:61614?maximumConnections=1000&amp;wireFormat.maxFrameSize=104857600"/>
+</transportConnectors>
+```
+
+配置uri格式: **`协议://hostname:port?key=value`**,keyvalue见[文档](http://activemq.apache.org/tcp-transport-reference)
+
+### 2. 协议
+
+tcp文档: [文档](http://activemq.apache.org/tcp-transport-reference)
+
+nio文档: [wendang][http://activemq.apache.org/configuring-version-5-transports.html]
+
+### 3. NIO
+
+NIO比TCP性能更好,我们来使用NIO
+
+* 步骤
+
+  * 修改配置文件,添加nio连接
+
+    ```xml
+    <transportConnector name="nio" uri="nio://0.0.0.0:61618?trace=true"></transportConnector>
+    ```
+
+    ![image-20210409124921512](../pics/activeMQ/image-20210409124921512.png)
+
+  * 然后把URI改一下就行
+
+### 4. NIO增强
+
+现在这个nio开头的协议只支持TCP协议的Openwire模型,我们想要支持其他协议
+
+* 开启协议自动匹配机制`auto+nio`,在生产消费时就可以任意适配,比如依然使用tcp协议
+
+  ```xml
+  <transportConnector name="nio" uri="auto+nio://0.0.0.0:61618?trace=true"></transportConnector>
+  ```
+
+  
+
+## 二. 持久化
+
+此处的持久化也是**可靠性**的一部分,但和MQ自带的持久化不是一个概念
+
+这里的持久化指的是保存到另一台主机上,比如数据库服务器
+
+默认持久化为KahaDB,后面推荐Replicated LevelDB
+
+### 1. 持久化插件实现形式
+
+`AMQ Message Store` 文件消息存储机制,已经废弃
+
+`KahaDB` :
+
+* 基于日志文件的持久化插件
+* 使用一个__事务日志__和__索引文件__来存储所有地址
+  * ![image-20210415143438483](../pics/activeMQ/image-20210415143438483.png)
+  * 日志文件: db-shuzi.log,最大32MB,超过就会另起一个db.log文件
+  * 当不再有引用到数据文件中的任何消息时,文件会被删除或者归档
+  * 索引文件: db.data,BTree索引
+
+`LevelDb`: 和KehaDB相似,使用LevelDB的索引,持久化更快
+
+### 2. Mysql - JDBC存储
+
+> 使用的时候程序打开持久化
+
+需要往activemq的lib添加mysql驱动
+
+再修改active的配置
+
+```xml
+<persistenceAdapter>
+    <!--<kahaDB directory="${activemq.data}/kahadb"/>-->
+    <jdbcPersistenceAdapter dataSource="#mysql-ds">
+</persistenceAdapter>
+```
+
+* 属性
+  * dataSource: 指定将要引用的持久化数据库的bean的名称.`#`即类似ref
+  * createTablesOnStratUp: 在启动的时候创建表,每次启动创建一个表,第一次启动后手动修改为false,默认为true
+
+* 创建对应名字的dataSource
+
+```xml
+ <bean id="mysql-ds" class="org.apache.commons.dbcp2.BasicDataSource" destroy-method="close">
+     <property name = "driverClassName" value="com.mysql.jdbc.Driver"></property>
+     <property name="url" value="jdbc:mysql://localhost:3306/activemq?relaxAutoCommit=true"></property>
+     <property name="username" value="sealll"></property>
+     <property name="passowrd" value="6MxnmR3DbzSksBW3"></property>
+     <property name="maxTotal" value="200"></property>
+</bean>
+```
+
+然后配mysql
+
+创建对应的数据库和几张表
+
+* 表:
+  * `ACTIVEMQ_MSGS`: 消息表
+  * `ACTIVEMQ_ACKS`: 订阅关系
+  * `ACTIVEMQ_LOCK`: 
+
+* 现象
+  * 队列生产: 数据出现在MSGS表中
+  * 队列消费: MSGS表中数据被删除
