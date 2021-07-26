@@ -2165,6 +2165,8 @@ __相对定位不会脱离文档流,绝对脱离会__
 >
 > background-attachment
 >
+> background-clip
+>
 > background
 
 * 设置背景图像:
@@ -2232,6 +2234,10 @@ __相对定位不会脱离文档流,绝对脱离会__
 ```
 
 * 没有顺序要求,样式可以不全写(用默认值)
+
+### 4. 背景填充区域
+
+`background-clip`可以指定填充区域,可以填充到margin
 
 ## 二. 用超链接冒充按钮(超链接图片)
 
@@ -2455,3 +2461,15 @@ linear-gradient(to right,red 50px,yellow,orange)   /*线性渐变,颜色沿着�
 radial-gradient() //放射渐变,参数跟上面用法差不多
 ```
 
+## 四. outline
+
+outline是轮廓,与border不同,不属于盒子模型,包在padding之外
+
+其他和border用法基本相同
+
+* 特殊属性: `outline-offset`: 轮廓离边框的距离,添加的空间背景透明
+
+## 五. 粘性定位和元素堆叠顺序
+
+* position:sticky用于实现类似下拉后固定的行为
+* 元素堆叠顺序: `z-index` css属性,越小叠在越下面,默认顺序是html元素顺序,最后的元素显示在顶部

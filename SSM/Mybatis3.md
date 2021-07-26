@@ -1167,3 +1167,420 @@ Mybatis开放了Cache接口来让人实现
 	}
 ```
 
+## 八. 原理
+
+![image-20210709120206594](../pics/Mybatis3/image-20210709120206594.png)
+
+### 1. SqlSessionFactory的初始化
+
+```java
+SqlSessionFactory sqlSessionFactory = new SqlSessionFactoryBuilder().build(inputStream);
+```
+
+该代码即初始化过程,inputStream是读入的全局配置文件
+
+`SqlSessionFactoryBuilder`: 是一个单纯的Builder,除了构造器就只有build了
+
+#### 1.1 Builder将xml转换为Configuration
+
+build方法最终落实到build(Configuration)的实现上,在此之前该Builder会将各种信息转换为Configuration,比如此地是xml
+
+```java
+XMLConfigBuilder parser = new XMLConfigBuilder(inputStream, environment, properties);
+return build(parser.parse());
+```
+
+```java
+public SqlSessionFactory build(Configuration config) {
+  return new DefaultSqlSessionFactory(config);
+}
+```
+
+以下是parse中的源码:
+
+evalNode和XNode是ibatis封装w3c.dom的实现,方便利用xpath查找及使用xml信息
+
+```java
+private void parseConfiguration(XNode root) {
+  try {
+    // issue #117 read properties first
+    propertiesElement(root.evalNode("properties"));
+    Properties settings = settingsAsProperties(root.evalNode("settings"));
+    loadCustomVfs(settings);
+    loadCustomLogImpl(settings);
+    typeAliasesElement(root.evalNode("typeAliases"));
+    pluginElement(root.evalNode("plugins"));
+    objectFactoryElement(root.evalNode("objectFactory"));
+    objectWrapperFactoryElement(root.evalNode("objectWrapperFactory"));
+    reflectorFactoryElement(root.evalNode("reflectorFactory"));
+      
+      //该方法内记录了每一个setting的信息及其默认值,可以看看
+    settingsElement(settings);
+    // read it after objectFactory and objectWrapperFactory issue #631
+    environmentsElement(root.evalNode("environments"));
+    databaseIdProviderElement(root.evalNode("databaseIdProvider"));
+    typeHandlerElement(root.evalNode("typeHandlers"));
+    mapperElement(root.evalNode("mappers"));
+  } catch (Exception e) {
+    throw new BuilderException("Error parsing SQL Mapper Configuration. Cause: " + e, e);
+  }
+}
+```
+
+展开1: `mapperElement`
+
+>  如果写了package就会按照包的方式添加Mapper,不然就会使用`XMLMapperBuilder`进行构建
+>
+> 其先将namespace存储,并且处理缓存,resultMap,sql之类的,最后处理增删改查标签
+>
+> 在解析增删改查标签时,使用`XMLStatementBuilder`
+>
+> > 先获取标签上所有的属性信息,然后作为参数传入一个方法中,该方法返回一个<u>**MappedStatement**并添加入configuration(id-statement映射)</u>.蕴含了一个增删改查标签的所有信息
+> >
+> > ```java
+> > builderAssistant.addMappedStatement(id, sqlSource, statementType, sqlCommandType,
+> >     fetchSize, timeout, parameterMap, parameterTypeClass, resultMap, resultTypeClass,
+> >     resultSetTypeEnum, flushCache, useCache, resultOrdered,
+> >     keyGenerator, keyProperty, keyColumn, databaseId, langDriver, resultSets);
+> > ```
+> >
+> > 对于c<u>onfiguration中的MapperRegistry</u>,保存接口和代理工厂的映射
+
+```java
+//MappedStatement的所有属性
+public final class MappedStatement {
+
+  private String resource;
+  private Configuration configuration;
+  private String id;
+  private Integer fetchSize;
+  private Integer timeout;
+  private StatementType statementType;
+  private ResultSetType resultSetType;
+  private SqlSource sqlSource;
+  private Cache cache;
+  private ParameterMap parameterMap;
+  private List<ResultMap> resultMaps;
+  private boolean flushCacheRequired;
+  private boolean useCache;
+  private boolean resultOrdered;
+  private SqlCommandType sqlCommandType;
+  private KeyGenerator keyGenerator;
+  private String[] keyProperties;
+  private String[] keyColumns;
+  private boolean hasNestedResultMaps;
+  private String databaseId;
+  private Log statementLog;
+  private LanguageDriver lang;
+  private String[] resultSets;
+}
+```
+
+### 2. openSession
+
+调用`openSessionFromDataSource`并返回SqlSession
+
+> __openSessionFromDataSource__:
+>
+> 参数中获取ExecutorType,先创建事务并添加一些信息
+>
+> 然后newExecutor
+>
+> > **newExecutor(tx,executype)**:
+> >
+> > (Executor是执行器接口,传入MappedStatement可以进行指定的操作)
+> >
+> > 根据Type是REUSE,BATCH,SIMPLE分别new不同的Executor
+> >
+> > 如果缓存开启就包装成CachedExecutor(每次操作先查缓存再操作)
+> >
+> > 最后拦截器链再将插件包装进Executor中
+> >
+> > ```java
+> > public Object pluginAll(Object target) {
+> >   for (Interceptor interceptor : interceptors) {
+> >     target = interceptor.plugin(target);
+> >   }
+> >   return target;
+> > }
+> > ```
+>
+> new一个DefaultSqlSEssion,将<u>configuration,executor和autoCommit=false</u>传入,并返回给主程序
+
+### 3. getMapper获取代理
+
+内部由configuration调用,传入类型和sqlSession(自己)
+
+再由`mapperRegistry`调用寻找
+
+其从`knownMappers`属性(一个Map<Class\<?>, MapperProxyFactory<?>> )获取**MapperProxyFactory**,获取不了就抛异常;
+
+之后: 
+
+```java
+mapperProxyFactory.newInstance(sqlSession);
+```
+
+> newInstance:
+>
+> 创建MapperProxy,其是一个InvocationHandler(动态代理传入的接口)
+>
+> 最后用最朴素的方式创建代理
+>
+> ```java
+> return (T) Proxy.newProxyInstance(mapperInterface.getClassLoader(), new Class[] { mapperInterface }, mapperProxy);
+> ```
+>
+> 
+
+### 4. Mapper执行查询方法
+
+获取的MapperProxy在执行方法时会先走进InvocationHandler的invoke方法
+
+```java
+@Override
+public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+  try {
+      //判断代理的方法来自Object还是接口
+    if (Object.class.equals(method.getDeclaringClass())) {
+      return method.invoke(this, args);
+    } else {
+        //将当前方法包装一个cachedInvoker再执行
+      return cachedInvoker(method).invoke(proxy, method, args, sqlSession);
+    }
+  } catch (Throwable t) {
+    throw ExceptionUtil.unwrapThrowable(t);
+  }
+}
+```
+
+Invoker再调用<u>mappedMethod的execute</u>
+
+```java
+@Override
+public Object invoke(Object proxy, Method method, Object[] args, SqlSession sqlSession) throws Throwable {
+  return mapperMethod.execute(sqlSession, args);
+}
+```
+
+> __execute__:
+>
+>  首先判断command的类型,我们这里是select
+>
+> 判断完毕后根据返回值情况来执行,此处我们来到else块
+>
+> ```java
+> if (method.returnsVoid() && method.hasResultHandler()) {
+>   executeWithResultHandler(sqlSession, args);
+>   result = null;
+> } else if (method.returnsMany()) {
+>   result = executeForMany(sqlSession, args);
+> } else if (method.returnsMap()) {
+>   result = executeForMap(sqlSession, args);
+> } else if (method.returnsCursor()) {
+>   result = executeForCursor(sqlSession, args);
+> } else {
+>     //转换参数,如果是单个就返回,如果是多个就包装成map返回
+>   Object param = method.convertArgsToSqlCommandParam(args);
+>     //执行jdbc
+>   result = sqlSession.selectOne(command.getName(), param);
+>   if (method.returnsOptional()
+>       && (result == null || !method.getReturnType().equals(result.getClass()))) {
+>     result = Optional.ofNullable(result);
+>   }
+> }
+> ```
+>
+> > __selectOne__:
+> >
+> > 查询列表并返回第一个值,如果太多或没有就自己抛异常
+> >
+> > ```java
+> > @Override
+> > public <T> T selectOne(String statement, Object parameter) {
+> >   // Popular vote was to return null on 0 results and throw exception on too many.
+> >   List<T> list = this.selectList(statement, parameter);
+> >   if (list.size() == 1) {
+> >     return list.get(0);
+> >   } else if (list.size() > 1) {
+> >     throw new TooManyResultsException("Expected one result (or null) to be returned by selectOne(), but found: " + list.size());
+> >   } else {
+> >     return null;
+> >   }
+> > }
+> > ```
+> >
+> > > __selectList__:
+> > >
+> > > 首先拿到mappedStatement,然后将其传入**executor执行query**
+> > >
+> > > 在执行前会按照一定依据封装集合参数
+> > >
+> > > > __CachingExecutor.query__:
+> > > >
+> > > > > __getBoundSql__:
+> > > > >
+> > > > > 根据statement中的信息和传入的参数,生成一个BoundSql;
+> > > > >
+> > > > > 包含: 预编译的sql语句,占位符映射信息,传入参数信息,还有些metadata
+> > > > >
+> > > > > 接着检查一下ParameterMapping的ResultMap,就将BoundSql返回了
+> > > >
+> > > > 然后生成一个缓存key
+> > > >
+> > > > 最后再调用另一个query方法进行查询
+> > > >
+> > > > > __query__: 先检查**二级缓存**,没有的话就执行被代理Executor的query
+> > > > >
+> > > > > > __SimpleExecutor.query__:
+> > > > > >
+> > > > > > 试图从**一级缓存**拿到值,我们这没有,就执行__queryFromDatabase__
+> > > > > >
+> > > > > > > __queryFromDatabase__:
+> > > > > > >
+> > > > > > > 缓存操作: 先在本地缓存中放一个key-占位符,查询结束后先清空占位符,然后根据有没有查到值放key-list进缓存
+> > > > > > >
+> > > > > > > 创建StatementHandler以及使用它创建Statement:
+> > > > > > >
+> > > > > > > > __newStatementHandler__:
+> > > > > > > >
+> > > > > > > > 根据配置的statementType创建PreparedStatementHandler,在外面包装一层RoutingStatementHandler
+> > > > > > > >
+> > > > > > > > 并加入ParameterHandler,ResultHandler
+> > > > > > > >
+> > > > > > > > <u>拦截器链分别给ParameterHandler,ResultHandler,StatementHandler添加插件</u>
+> > > > > > >
+> > > > > > > > __prepareStatement__:
+> > > > > > > >
+> > > > > > > > 底层使用connection.prepareStatement创建,并进行一些设置
+> > > > > > > >
+> > > > > > > > 紧接着就预编译(parameterize)
+> > > > > > > >
+> > > > > > > > ```java
+> > > > > > > > @Override
+> > > > > > > > public void parameterize(Statement statement) throws SQLException {
+> > > > > > > >     //底层调用TypeHandler设置参数,最底层当然是statement设置参数
+> > > > > > > >   parameterHandler.setParameters((PreparedStatement) statement);
+> > > > > > > > }
+> > > > > > > > ```
+> > > > > > >
+> > > > > > > 最后由handler配合生成的statement执行query
+> > > > > > >
+> > > > > > > ```java
+> > > > > > > @Override
+> > > > > > > public <E> List<E> query(Statement statement, ResultHandler resultHandler) throws SQLException {
+> > > > > > >   PreparedStatement ps = (PreparedStatement) statement;
+> > > > > > >   ps.execute();
+> > > > > > >   return resultSetHandler.handleResultSets(ps);
+> > > > > > > }
+> > > > > > > ```
+
+## 九. 插件
+
+### 1. 原理
+
+原理就是上面源码中对四个对象进行拦截器链添加插件
+
+机制: 拦截器创建代理对象并返回
+
+```java
+public Object pluginAll(Object target){
+    for(Interceptor interceptor: intercrptors){
+        target = interceptor.plugin(target);
+    }
+    return target;
+}
+```
+
+### 2. 编写流程
+
+简单地说就是实现Interceptor并放入链条
+
+* **Interceptor: 主要是拦截并包装四大对象**
+
+  ```java
+  public interface Interceptor {
+  	//拦截目标方法执行
+      //调用invocation.proceed()相当于执行方法,会返回方法的返回值
+      //该方法返回的内容即最终返回值
+    Object intercept(Invocation invocation) throws Throwable;
+  	
+      //包装对象,即根据intercept的内容给四大对象包装动态代理,这里已经提供了默认实现
+    default Object plugin(Object target) {
+      return Plugin.wrap(target, this);
+    }
+  
+    default void setProperties(Properties properties) {
+      // 配置时设置的属性
+    }
+  
+  }
+  ```
+
+也就是说实现intercept的操作即可
+
+* **但是这还不够,我们需要用注解注明拦截哪些对象的哪些方法**,`@Intercepts`
+
+  ```java
+  @Documented
+  @Retention(RetentionPolicy.RUNTIME)
+  @Target(ElementType.TYPE)
+  public @interface Intercepts {
+    /**
+     * Returns method signatures to intercept.
+     * 返回要拦截的方法签名
+     * @return method signatures
+     */
+    Signature[] value();
+  }
+  ```
+
+  ```java
+  @Documented
+  @Retention(RetentionPolicy.RUNTIME)
+  @Target({})
+  public @interface Signature {
+    // 拦截的类型,主要是四大对象
+    Class<?> type();
+    //方法名
+    String method();
+    //参数类型列表
+    Class<?>[] args();
+  }
+  ```
+
+  
+
+* Interceptor实现示例:
+
+  ```java
+  @Intercepts({
+          @Signature(type= StatementHandler.class,method="parameterize",args={Statement.class})
+  })
+  public class MyInterceptor implements Interceptor {
+      @Override
+      public Object intercept(Invocation invocation) throws Throwable {
+          return invocation.proceed();
+      }
+  
+      @Override
+      public void setProperties(Properties properties) {
+          System.out.println(properties);
+      }
+  }
+  ```
+
+  
+
+* **将拦截器注册进全局配置**:
+
+  * xml: 使用plugins标签
+
+    ```xml
+    <plugins>
+        <plugin interceptor="com.sealll.interceptor.MyInterceptor">
+            <property name="username" value="123"/>
+            <property name="pass" value="123"/>
+        </plugin>
+    </plugins>
+    ```
