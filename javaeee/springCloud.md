@@ -1,3 +1,13 @@
+```
+@SpringBootApplication
+@EnableConfigServer
+public class ConfigMain3344 {
+    public static void main(String[] args) {
+        SpringApplication.run(ConfigMain3344.class);
+    }
+}
+```
+
 # SpringCloud(Hoxton)介绍
 
 [TOC]
@@ -964,4 +974,96 @@ public class MyLogGatewayFilter implements GlobalFilter, Ordered {
 
 
 # 配置中心Config
+
+## 一. 是什么
+
+大量的服务都需要必要的配置信息才能运行,所以一套集中式的,动态的配置管理设施必不可少
+
+Config为微服务架构中的微服务提供集中化的外部配置支持,配置服务器位各个不同的微服务应用的所有环境提供了一个**中心化的外部配置**
+
+![image-20210726132616671](../pics/springCloud/image-20210726132616671.png)
+
+
+### 2. 内容
+
+Config分为服务端和客户端两部分
+
+服务端为分布式配置中心,是一个独立的微服务应用
+
+整合GITHUB仓库使用全局配置中心
+
+## 二. 使用
+
+### 1. 准备工作
+
+创建新的Github仓库
+
+clone到本地
+
+```xml
+<dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-config-server</artifactId>
+</dependency>
+```
+
+配置:
+
+```yml
+server:
+  port: 3344
+
+spring:
+  application:
+    name: cloud-config-center
+  cloud:
+    config:
+      server:
+        git:
+          uri: https://github.com/coolcheng222/springcloud-config.git
+          username:
+          password:
+          search-paths:
+            - springcloud-config
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:7001
+```
+
+```java
+@SpringBootApplication
+@EnableConfigServer
+public class ConfigMain3344 {
+    public static void main(String[] args) {
+        SpringApplication.run(ConfigMain3344.class);
+    }
+}
+```
+
+![image-20210726135813994](../pics/springCloud/image-20210726135813994.png)
+
+# 消息总线bus
+
+## 一. 
+
+bus能够解决config不能动态刷新的问题,所以Config一般和bug一起使用
+
+就是用消息中间件通知bus发送post请求,替代手动post请求
+
+# 消息驱动Stream
+
+## 一. 介绍
+
+### 1. 解决的问题
+
+MQ(消息中间件)有多种实现,一个系统中可能存在多种MQ,对切换和维护增加了难度
+
+消息驱动让我们不再关注MQ的细节,我们只需要一种适配绑定方式,自动给我们在MQ中切换; 类似jdbc
+
+### 2. 绑定器Binder
+
+Binder是一个接口,由各种厂商实现,目前仅有RabbitMQ,Kafka
+
+### 3. 设计思想
 
