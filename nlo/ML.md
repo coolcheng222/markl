@@ -422,7 +422,185 @@ g是梯度向量,H是二阶导Hessian矩阵
 但是太大或者太小的learning rate都有问题,所以我们要`动态的learning rate`
 
 * 原则:
-  * 如果陡峭,希望learning rate小一点; 反之,希望learning rate大一点
-* 改写:
-  * ![image-20220101152303328](../pics/ML/image-20220101152303328.png)
 
+  * 如果陡峭,希望learning rate小一点; 反之,希望learning rate大一点
+
+* 改写1(Adagrad):
+
+  * 改成parameter dependent learning rate
+
+    $\theta^{t+1}_i<-\theta^t_i-\frac{\eta}{\sigma^t_i}g^t_i$
+
+  * ![image-20220101152839024](../pics/ML/image-20220101152839024.png)
+
+* 改写2(RMSProp):
+  * 之前的问题: 希望在同一个参数同一个方向动态调整
+  * 即在之前的基础上,可以用hyperparameter调整前面gradient的权重
+  * ![image-20220101153240736](../pics/ML/image-20220101153240736.png)
+
+* 最终版本: **Adam = RMSProp + Momentum**
+
+2. learning rate的另一个问题: 通过积累使错误轴的势头累积,冲向错误的方向
+
+   `learning rate scheduling`: 将$\eta$跟时间有关
+
+   * learning rate decay: 随着时间降低
+   * warm up: 上升再下降
+
+### 4. loss
+
+MSE
+
+分类上更常用的: `Cross-entropy交叉熵`: ![image-20220102221551471](../pics/ML/image-20220102221551471.png),y'的含义见`附. 分类`
+
+### 5. batch normalization
+
+制造好的dimension来改变error surface的形状,使用标准化
+
+当方差比较大时,error surface比较难找
+
+![image-20220102222604288](../pics/ML/image-20220102222604288.png)
+
+![image-20220102223025830](../pics/ML/image-20220102223025830.png)
+
+## 附. 分类classfication
+
+分类就是依然输出标量,将类别也标量化,并经过softmax映射或者sigmoid映射
+
+![image-20220102221332760](../pics/ML/image-20220102221332760.png)
+
+## 四. CNN卷积神经网络
+
+### 1. 介绍
+
+`CNN(Convolutional Neural Network)`卷积神经网络应用于图片
+
+模型的目标是输入一张固定大小的图片,输出一个分类
+
+* 图像的表示:
+  * 图片 = 3d tensor(长,宽,3*channels(rgb))
+  * 比如一张100 * 100 的图片,我们将其排成一排,称为3 * 100 * 100大小的数组
+  * 这样的数组成为nn的输入
+
+#### 1.1 引入1
+
+* 问题1:
+  * full connection造成weight的数目过大,容易造成overfitting
+* 观察1:
+  * 一张图片的分类可以通过Pattern(特征)来判断,并不需要每一个neural都看完整的图片
+* 简化1:
+  * 设定一个区域叫`Receptive field`,每一个neural只需要关注这一个范围即可
+  * Receptive field可以重叠
+  * 经典receptive field:
+    * 会看所有的channel(rgb),只在乎长和宽(`kernel size`),一般为3*3
+    * 每个receptive field会有__一组__neural去处理
+    * 有间隔的选择receptive field,一般`stride`为2,最好有重叠
+    * 如果有一部分超出了范围,即创建为`padding`,向超出范围大小的部分填写值,比如0
+
+* 观察2:
+  * pattern会出现在不同图片的不同地方
+  * 每个receptive field的每个神经元都是在侦测不同的pattern
+  * 不同recept field都会有一簇神经元检测同样的特征
+* 简化2:
+  * 不同receptive field相同目的的神经元**共享参数**,称为`Filter`
+
+> Convolutional Layer = Receptive Field + Parameter Sharing
+>
+> 卷积层的model bias较大,但不容易overfitting
+
+#### 1.2 引入2
+
+图片->Convolution里面包含了很多**Filter**(3 * 3 * channel(rgb/bw) tensor)
+
+<img src="../pics/ML/image-20220105201533033.png" alt="image-20220105201533033" style="zoom:50%;" />
+
+<img src="../pics/ML/image-20220105201654504.png" alt="image-20220105201654504" style="zoom:50%;" />
+
+#### 1.3 pooling
+
+pooling就是一个操作减少运算量,比如max pooling,将图像分为各个pool,选择最大的作为代表,其他丢弃
+
+<img src="../pics/ML/image-20220105202141496.png" alt="image-20220105202141496" style="zoom:50%;" />
+
+#### 1.4 flatten
+
+在经过convolution和pooling几轮后拉直成一条,经过fully connected network再softmax获得最终结果
+
+![image-20220105202344301](../pics/ML/image-20220105202344301.png)
+
+## 五. self-attention
+
+### 1. 引入
+
+输入是**Sequence并且seq大小会改变的vertor,**就算是CNN都没有做到
+
+输出: 
+
+1. 每一个vector都有对应的label,比如文字-词性`Sequence Labeling`
+2. 整个seq输出一个label
+3. 不知道输出多少label(`seq2seq`)
+
+比如: 输入的是一句句子
+
+### 2. 表示法
+
+1. `one-hot encoding`: 假设所有词汇没有关联
+
+   ![image-20220105203310295](../pics/ML/image-20220105203310295.png)
+
+2. `word embedding`:给每个词汇一个向量
+
+   ![image-20220105203342005](../pics/ML/image-20220105203342005.png)
+
+
+
+
+
+### 3. Sequence Labeling注意力
+
+#### 3.1 前提
+
+直觉: fully connected做法,但是对于相同的输入一定会给出相同的结果
+
+优化: 分window而不是孤立,如果要考虑整个sequence的话就无法解决
+
+<img src="../pics/ML/image-20220105204201501.png" alt="image-20220105204201501" style="zoom:50%;" />
+
+#### 3.2 self attention
+
+`self-attention`来自于Transformer,接收一整个seq,并且对应每个vector输出label
+
+可以与FC交替使用
+
+### 4. 运作方式
+
+1. 确定输入$a_1$与其他输入之间的关联$\alpha$ (attention score)
+
+   * 计算方式: 
+
+     1. dot-product: $\alpha = (W^qa_1) * (W^ka_2)$
+
+     2. Additive:
+
+        <img src="../pics/ML/image-20220105204938617.png" alt="image-20220105204938617" style="zoom:33%;" />
+
+![image-20220105210640115](../pics/ML/image-20220105210640115.png)
+
+2. 然后把$\alpha$做__softmax__
+3. 接着再把a * $W^v$得到新的向量v,将$v *\alpha'$再相加得到b1(a1对应的结果)
+
+> 带W的都是要训练的
+
+<img src="../pics/ML/image-20220107171735747.png" alt="image-20220107171735747" style="zoom:50%;" />
+
+### 5 矩阵运作方式
+
+<img src="../pics/ML/image-20220107172510310.png" alt="image-20220107172510310" style="zoom:50%;" />
+
+### 6. 输入位置判断
+
+`Positional Encoding`: 给每个输入设置一个位置资讯vector $e^i$,并加到$a^i$上
+
+$e^i$的取值:
+
+![image-20220107173204078](../pics/ML/image-20220107173204078.png)
