@@ -1565,7 +1565,7 @@ txt = txt.replace('<eos>','\n')
 print(txt)
 ```
 
-## 四. seq2seq
+## 四.plus seq2seq
 
 输入输出都是时序数据,就是seq2seq
 
@@ -1712,4 +1712,362 @@ class Decoder:
             sampled.append(int(sample_id))
         return sampled
 ```
+
+### 5. seq2seq模型
+
+```python
+class Seq2seq(BaseModel):
+    def __init__(self,vocab_szie,wordvec_size,hidden_size):
+        V,D,H = vocab_szie,wordvec_size,hidden_size
+        self.encoder = Encoder(V,D,H)
+        self.decoder = Decoder(dasfV,D,H)
+        self.softmax = TimeSoftmaxWithLoss()
+        
+        self.params = self.encoder.params + self.decoder.params
+        self.grads = self.encoder.grads + self.decoder.grads
+
+    def forward(self,xs,ts):
+        decoder_xs,decoder_ts = ts[:,:-1],ts[:,1:]
+        
+        h = self.encoder.forward(xs)
+        score = self.decoder.forward(decoder_xs,h)
+        loss = self.softmax.forward(score,decoder_ts)
+
+        return loss
+    def backward(self,dout=1):
+        dout = self.softmax.backward(dout)
+        dh = self.decoder.backward(dout)
+        dout = self.encoder.backward(dh)
+        return dout
+    def generate(self,xs,start_id,sample_size):
+        h = self.encoder.forward(xs)
+        sampled = self.decoder.generate(h,start_id.sample_size)
+        return sampled
+```
+
+### 6. seq2seq评价
+
+学习代码基本同基础神经网络
+
+```python
+
+(x_train,t_train),(x_test,t_test) = sequence.load_data('addition.txt')
+char_to_id,id_to_char = sequence.get_vocab()
+vocab_size = len(char_to_id)
+wordvec_size = 16
+hidden_size = 128
+batch_size = 128
+max_epoch = 25
+max_grad = 5.0
+
+model = Seq2seq(vocab_size ,wordvec_size,hidden_size)
+optimizer = Adam()
+trainer = Trainer(model,optimizer)
+print(x_test[[1]])
+acc_list = []
+for epoch in range(max_epoch):
+    trainer.fit(x_train,t_train,max_epoch=max_epoch,batch_size=batch_size,max_grad=max_grad)
+    correct_num = 0
+    for i in range(len(x_test)):
+        question,correct = x_test[[i]],t_test[[i]]
+        verbose = i < 10
+        correct_num += eval_seq2seq(model,question,correct,id_to_char,verbose)
+    acc = float(correct_num) / len(x_test)
+    acc_list.append(acc)
+    print('val acc %.3f%%' % (acc * 100))
+    
+```
+
+### 7. 改进
+
+#### 7.1 翻转输入
+
+玄学,有时候就是会变好
+
+```python
+x_train,x_test = x_train[:,::-1],x_test[:,::-1]
+```
+
+#### 7.2 peeky Decoder
+
+窥视: 编码器输出的h在解码器中只交给了lstm,但是其包含编码中的所有信息,可以也交给其它层看看
+
+比如我们可以将h对所有affine和lstm可视
+
+* 输入拼接:
+  * 我们可以将原来的输入和h拼接(concat)输入给lstm和affine
+
+```python
+
+class PeekDecoder:
+    def __init__(self,vocab_size,wordvec_size,hidden_size):
+        V,D,H = vocab_size,wordvec_size,hidden_size
+        rn = np.random.randn
+
+        embed_W = (rn(V,D) / 100).astype('f')
+        lstm_Wx = (rn(H + D, 4 * H) / np.sqrt(H + D)).astype('f')
+        lstm_Wh = (rn(H,4 * H) / np.sqrt(H)).astype('f')
+        lstm_b = np.zeros(4 * H).astype('f')
+        affine_W = (rn(H + H,V) / np.sqrt(H + H)).astype('f')
+        affine_b = np.zeros(V).astype('f')
+
+        self.embed = TimeEmbedding(embed_W)
+        self.lstm = TimeLSTM(lstm_Wx,lstm_Wh,lstm_b,stateful=True)
+        self.affine = TimeAffine(affine_W,affine_b)
+        self.params,self.grads = [],[]
+
+        for layer in (self.embed,self.lstm,self.affine):
+            self.params += layer.params
+            self.grads += layer.grads
+        self.cache = None
+    def forward(self,xs,h):
+        N,T = xs.shape
+        N,H = h.shape
+        self.lstm.set_state(h)
+        out = self.embed.forward(xs)
+        hs = np.repeat(h,T,axis=0).reshape(N,T,H)
+        out = np.concatenate((hs,out),axis=2)
+        out = self.lstm.forward(out)
+        out = np.concatenate((hs,out),axis=2)
+        score = self.affine.forward(out)
+        self.cache = H
+        return score
+    def backward(self, dscore):
+        H = self.cache
+
+        dout = self.affine.backward(dscore)
+        dout, dhs0 = dout[:, :, H:], dout[:, :, :H]
+        dout = self.lstm.backward(dout)
+        dembed, dhs1 = dout[:, :, H:], dout[:, :, :H]
+        self.embed.backward(dembed)
+
+        dhs = dhs0 + dhs1
+        dh = self.lstm.dh + np.sum(dhs, axis=1)
+        return dh
+
+    def generate(self, h, start_id, sample_size):
+        sampled = []
+        char_id = start_id
+        self.lstm.set_state(h)
+
+        H = h.shape[1]
+        peeky_h = h.reshape(1, 1, H)
+        for _ in range(sample_size):
+            x = np.array([char_id]).reshape((1, 1))
+            out = self.embed.forward(x)
+
+            out = np.concatenate((peeky_h, out), axis=2)
+            out = self.lstm.forward(out)
+            out = np.concatenate((peeky_h, out), axis=2)
+            score = self.affine.forward(out)
+
+            char_id = np.argmax(score.flatten())
+            sampled.append(char_id)
+
+        return sampled
+```
+
+### 8. 应用
+
+聊天机器人
+
+自动摘要
+
+问答系统
+
+邮件回复
+
+翻译
+
+## 五. Attention
+
+### 1. seq2seq当前的问题
+
+1. 编码器输出固定长度的矢量
+
+   无论文本长度如何,seq2seq总是让Encoder输出固定长度的矢量,早晚会遇到信息瓶颈
+
+* encoder的改进:
+  * 到现在为止,我们都只将LSTM层最右边输出,但是该长度应该随着输入长度改变
+  * 比如我们可以将所有的h都输出,形成hs,这样hs的大小就和矢量数齐平
+* 对应的decoder改进:
+
+### 2. 对decoder的改进
+
+> 目标: 对齐,将串与串之间的关系一 一对应,比如cat和猫对应的信息.
+>
+> 这就需要NN把注意力放在必要的信息上,这个机制也就叫做Attention
+
+对于Decoder中的LSTM层,我们依然输入最后一个隐藏状态,即hs[-1]
+
+但是要使用到整个hs(即对于完整的输入串),我们在LSTM和Affine中添加一层
+
+* 这一层的工作就是,**根据LSTM的输出,选择合适的编码器输出的隐藏状态**,并进行运算后交给affine
+* 选择步骤就是使用权重,即构造一个$向量\alpha$,然后对hs元素乘法
+  * 第一步: 权重向量a repeat
+  * 第二步: hs * a
+  * 第三步: 结果求和形成挑选的的h
+
+```python
+class WeightSum:
+    def __init__(self):
+        self.params,self.grads = [],[]
+        self.cache = None
+    def forward(self,hs,a):
+        N,T,H = hs.shape
+
+        ar = a.reshape(N,T,1).repeat(H,axis=2)
+        t = hs * ar
+        c = np.sum(t,axis=1)
+        
+        self.cache = hs,ar
+        return c
+    def backward(self,dc):
+        hs,ar = self.cache
+        N,T,H = hs.shape
+
+        dt = dc.reshape(N,1,H).repeat(T,axis=1)
+        dar = dt * hs
+        dhs = dt * ar
+        da = np.sum(dar,axis = 2)
+        return dhs,da
+
+```
+
+
+
+### 3. decoder调整二: 计算权重
+
+我们拿出decoder中LSTM根据最右hs输出给下一层的h,和hs逐一计算内积(计算相似关系),形成权重
+
+LSTM->h * hs = s
+$$
+\alpha = softmax(s)
+$$
+
+```python
+class AttentionWeight:
+    def __init__(self):
+        self.params,self.grads = [],[]
+        self.softmax = Softmax()
+        self.cache = None
+    def forward(self,hs,h):
+        N,T,H = hs.shape
+
+        hr = h.reshape(N,1,H).repeat(H,axis=2)
+        t = hs * hr
+        s = np.sum(t,axis=2)
+        a = self.softmax.forward(s)
+        self.cache = (hs,hr)
+        return a
+    def backward(self,da):
+        hs,hr = self.cache
+        N,T,H = hs.shape
+
+        ds = self.softmax.backward(ds)
+        dt = ds.reshape(N,T,1).repeat(H,axis=2)
+        dhs = dt * hr
+        dhr = dt * hs
+        dh = np.sum(dhr,axis=1)
+
+```
+
+* 两层结合
+
+### 4. Attention层
+
+```python
+class Attention:
+    def __init__(self):
+        self.params,self.grads = [],[]
+        self.attention_weight_later = AttentionWeight()
+        self.weight_sum_layer = WeightSum
+        self.attention_weight = None
+    def forward(self,hs,h):
+        a = self.attention_weight.forward(hs,h)
+        out = self.weight_sum_layer.forward(hs,a)
+        self.attention_weight = a
+        return out
+    def backward(self,dout):
+        dhs0,da = self.weight_sum_layer.backward(dout)
+        dhs1,dh = self.attention_weight_later.backward(da)
+        dhs = dhs0 + dhs1
+        return dhs,dh
+```
+
+### 5. Attention下的Encoder和Decoder
+
+AttentionEncoder:
+
+```python
+class AttentionEncoder(Encoder):
+    def forward(self,xs):
+        xs = self.embed.forward(xs)
+        hs = self.lstm.forward(xs)
+        # 就是改成返回整个hs
+        return hs
+
+    def backward(self,dhs):
+        # 省力
+        dout = self.lstm.backward(dhs)
+        dout = self.embed.backward(dout)
+        return dout
+```
+
+AttentionDecoder:
+
+```python
+class AttentionDecoder:
+    def __init__(self,vocab_size,wordvec_size,hidden_size):
+         V,D,H = vocab_size,wordvec_size,hidden_size
+        rn = np.random.randn
+
+        embed_W = (rn(V,D) / 100).astype('f')
+        lstm_Wx = (rn(H + D, 4 * H) / np.sqrt(H + D)).astype('f')
+        lstm_Wh = (rn(H,4 * H) / np.sqrt(H)).astype('f')
+        lstm_b = np.zeros(4 * H).astype('f')
+        affine_W = (rn(H + H,V) / np.sqrt(H + H)).astype('f')
+        affine_b = np.zeros(V).astype('f')
+        
+        self.embed = TimeEmbedding(embed_W)
+        self.lstm = TimeLSTM(lstm_Wx,lstm_Wh,lstm_b,stateful=True)
+        self.attention = TimeAttention()
+        self.affine = TimeAffine(affine_W,affine_b)
+        layers = [self.embed,self.lstm,self.attention,self.affine]
+
+        self.params,self.grads = [],[]
+        for layer in layers:
+            self.params += layer.params
+            self.grads = layer.grads
+    def forward(self,xs,enc_hs):
+        h = enc_hs[:,-1] # 所有N中的最后一个向量的集合
+        self.lstm.set_state(h)
+        out = self.embed.forward(xs)
+        dec_hs = self.lstm.forward(out)
+        c = self.attention.forward(enc_hs,dec_hs)
+        out = np.concatemate((c,dec_hs),axis=2)
+        score = self.affine.forward(out)
+
+        return score
+```
+
+### 6. 训练和评价
+
+将Seq2seq的编码解码器替换即可形成Attention的Seq2seq
+
+```python
+class AttentionSeq2seq(Seq2seq):
+    def __init__(self,vocab_szie,wordvec_size,hidden_size):
+        V,D,H = vocab_szie,wordvec_size,hidden_size
+        self.encoder = AttentionEncoder(V,D,H)
+        self.decoder = AttentionDecoder(V,D,H)
+        self.softmax = TimeSoftmaxWithLoss()
+        
+        self.params = self.encoder.params + self.decoder.params
+        self.grads = self.encoder.grads + self.decoder.grads
+```
+
+这次以日期时间转换作为内容进行处理:
+
+其实代码跟普通seq2seq一致
 

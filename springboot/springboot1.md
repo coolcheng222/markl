@@ -563,7 +563,7 @@ Spring Boot uses a very particular `PropertySource` order that is designed to al
 ### 1. @EnableAutoConfiguration回顾
 
 ```java
-@AutoConfigurationPackage
+@AutoConfigurationPackage //导入main下路径包的组件
 @Import(EnableAutoConfigurationImportSelector.class) // 导入了很多autoConfig类
 public @interface EnableAutoConfiguration {
 ```

@@ -799,3 +799,20 @@ push_front,push_back
 ### 2. 赋值和大小操作
 
 和vector一样,但是没有容量概念
+
+# 备选
+
+## 一. 类型大小
+
+### 1. 整型
+
+1. `short`: 2
+2. `int`: 4
+3. `long`: win4,linux: 32-4,64-8
+4. `longlong` : 8
+
+### 2. 浮点型
+
+`float`: 4
+
+`double`: 8
