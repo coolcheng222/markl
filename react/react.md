@@ -260,3 +260,25 @@ demo(){
 }
 ```
 
+### 5. 简化: 优化掉this问题和state声明
+
+对于没有上面传下来state的情况,可以把state抽取出属性
+
+对于方法也一样,赋值箭头函数可以解决this的问题
+
+```jsx
+class Try2 extends React.Component{
+
+    // 赋值属性和方法(注意用=)
+    state = {abc:`haha`,wind:`大风`}
+    demo = ()=>{
+        this.setState({abc:`${this.state.abc}ha`})
+        console.log(`${this.state.abc}hahaha`)
+    }
+    render() {
+        const {abc} = this.state
+        return <h1 onClick={this.demo}>今天{abc}</h1>
+    }
+}
+```
+
