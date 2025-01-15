@@ -133,7 +133,7 @@ class MybatispApplicationTests {
 
 * `value`: 列名,驼峰命名
 
-* `el`: 映射情况,类似于我们会在配置时使用#{role, jdbcType=BIGINT}这样的语法,我们在el中可以配置"role, jdbcType=BIGINT"
+  * `el`: 映射情况,类似于我们会在配置时使用#{role, jdbcType=BIGINT}这样的语法,我们在el中可以配置"role, jdbcType=BIGINT"
 
 * `exist`: 数据库里是否存在该字段映射,默认为true
 

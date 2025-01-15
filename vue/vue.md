@@ -374,7 +374,7 @@ this指向组件实例,使用实例属性时应带上this,**不建议定义箭�
 
 下图是组件实例的生命周期,红框是生命周期对应的钩子方法,到对应生命周期时钩子方法会触发
 
-<img src="https://v3.vuejs.org/images/lifecycle.svg" alt="Instance lifecycle hooks" style="zoom:50%;" />
+![组件生命周期图](https://vuejs.org/assets/lifecycle.DLmSwRQE.png)
 
 钩子方法定义: 以方法形式定义在option中,方法名见图片中的内容
 

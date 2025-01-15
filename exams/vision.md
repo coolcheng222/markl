@@ -287,3 +287,43 @@ Bounding box(dection) is removed
 Colored mask (segmentation)stay
 
 ![image-20230928164505133](E:/markd/pics/vision/image-20230928164505133.png)
+
+## 六. Harris Corner Detection
+
+### 1. Feature extraction
+
+`Corners`和`blobs`分别寻找"角度"和"区块(有不同的属性)"
+
+geometric invariance: 旋转,放大
+
+photometric invariance: 曝光,亮度
+
+* advantages
+  * **locality:** robust to occlusion
+  * **quantity**
+  * **distinctiveness**
+  * **efficiency**
+
+* Approach
+  * Feature detection
+  * Feature descriptor
+  * Feature matching
+  * Feature tracking
+
+## 七. blobs
+
+Log,高斯的拉普拉斯算子,加入卷积可以识别blobs(圆形区域)
+
+### 1, Scale Invariabt Feature Transform
+
+SIFT
+
+
+
+1. peak detection: 挑选最大值
+
+2. roubust matchning technique:(Feature matching)
+   * 处理视野中的变化
+   * 处理illumination中的关键改变
+   * 快和高效
+   * 代码可用

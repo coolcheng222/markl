@@ -282,3 +282,247 @@ class Try2 extends React.Component{
 }
 ```
 
+## 五. props
+
+从父组件读入信息
+
+### 1. 基本使用和批量传递
+
+props作为constructor的参数传递进来,__只读__
+
+在父组件使用子组件的标签中,以属性写在标签中
+
+```jsx
+function App() {
+    return <Try2 name={"haha"}></Try2>
+}
+```
+
+```jsx
+render() {
+    return <h1>今天{this.props.name}</h1>
+}
+```
+
+* 批量引入
+
+可以使用__拓展运算符__的语法给组件添加props
+
+```java
+function App() {
+    const p = {name: "haha",age: 18}
+    return <Try2 {...p}></Try2>
+}
+```
+
+这里的...p是babel和react共同作用允许展开的结果,只能用于props
+
+### 2. props的限制和默认值
+
+默认的props显式值一定是字符串(拓展运算符的对象不是)
+
+我们需要对props进行一定的限制,使用static属性
+
+依赖: `prop-types`
+
+```js
+import PropTypes from "prop-types";
+```
+
+```js
+static propTypes = {
+    name: PropTypes.string.isRequired
+}
+```
+
+> 对于函数,传propTypes.func
+
+默认值:
+
+```js
+static defaultProps = {
+    name: 'haha'
+}
+```
+
+### 3. 函数式的props
+
+```js
+function Try(props){
+    return <h1>{props.name}</h1>
+}
+```
+
+
+
+## 六. refs
+
+### 1. (过时)使用字符串ref
+
+refs是实例对象的属性
+
+引入: 拿到input的值
+
+在vue中也有类似的用法,也就是在input(dom)上增加__属性ref__并添加一个字符串标识名,在实例中用`this.refs["标识名"]`进行dom的使用
+
+```js
+<input ref="input1" type="text" placeholder="haha"/>
+```
+
+```js
+clicking = ()=>{
+    console.log(this.refs["input1"].value)
+}
+```
+
+### 2. 回调的refs
+
+回调形式也就是这样:
+
+```jsx
+<input ref={()=>{}}/>
+```
+
+其参数也就是该节点
+
+```jsx
+<input ref={(a)=>{this.input1 = a}} />
+```
+
+直接把ref挂在组件实例上
+
+```js
+clicking = ()=>{
+    console.log(this.input1.value);
+}
+```
+
+> 如果ref是以内联函数定义的,更新(重新render)过程会调用两次,第一次传入null,第二次传入dom
+
+### 3. createRef的refs
+
+`React.createRef()`返回一个容器(**每个标识对应一个容器**),存储被ref标识的节点
+
+```jsx
+myRef = React.createRef()
+
+<input ref={this.myRef} type="text" placeholder="haha"/>
+```
+
+当发生回调时,在对应方法中使用`this.myRef.current`即可
+
+```jsx
+clicking = ()=>{
+    console.log(this.myRef.current);
+}
+```
+
+## 七. 事件处理
+
+### 1. 底层流程
+
+1. 委托给组件最外层的元素(冒泡)
+2. 通过event.target得到发生事件的dom对象
+
+```jsx
+clicking = (e)=>{
+    console.log(e.target);
+}
+```
+
+### 2. 非受控组件
+
+> 所有输入类的节点都是现用现取为非受控组件
+
+引例: 一个form提交
+
+```jsx
+<form onSubmit={this.submit}>
+    <input  type="text" name="username" placeholder="haha"/>
+    <input  type="text" name="password" placeholder="hengheng"/>
+    <button>点我</button>
+</form>
+```
+
+阻止默认行为(复习)
+
+```js
+submit = (event)=>{
+    event.preventDefault()
+}
+```
+
+### 3. 受控组件
+
+用onChange更新state就能存
+
+```jsx
+<form onSubmit={this.submit} >
+    <input onChange={this.change1}  type="text" name="username" placeholder="haha"/>
+    <input onChange={this.change2}   type="text" name="password" placeholder="hengheng"/>
+    <button type="submit">点我</button>
+    </form>
+```
+
+### 4. 技巧: 高阶函数
+
+> 高阶函数就是传入或者返回函数
+>
+> 函数柯里化: 以返回函数的方式连续调用
+
+onChange等回调可以接受一个函数,我们可以传入一个__返回函数的函数__,由此我们可以__指定参数__
+
+```jsx
+<form onSubmit={this.submit} >
+    <input onChange={this.change("username")}  type="text" name="username" placeholder="haha"/>
+    <input onChange={this.change("password")}   type="text" name="password" placeholder="hengheng"/>
+    <button type="submit">点我</button>
+</form>
+
+// 该函数返回一个函数,内部动态指定State
+change = (e)=>{
+    return (event)=>{
+    this.setState({[e]:event.target.value})
+    }
+}
+```
+
+
+
+## 八. 生命周期
+
+>mount
+>
+>unmount
+
+内置方法:(钩子函数)
+
+`componentDidMount`挂载回调
+
+`componentWillUnmount`卸载回调
+
+### 1. 旧生命周期(不是过时)
+
+组件创建:
+
+```
+constructor->
+componentWillMount->
+render->
+componentDidMount
+```
+
+更新流程:(比如setState)
+
+```js
+componentWillReceiveProps(第一次不算)->
+shouldComponentUpdate(setState从这里)->
+componentWillUpdate(forceUpdate从这里)->
+render->
+componentDidUpdate
+```
+
+返回中间两个返回**false**则不会更新
+
+> forceUpdate就用this.forceUpdate()就行了
+

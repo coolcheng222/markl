@@ -250,3 +250,33 @@ class Person {
 ### 2. 继承
 
 用extends继承
+
+# 五. 枚举
+
+枚举语法:
+
+```ts
+enum Direction {
+    Up = 1,
+    Down, // 这里是2,为上一个+1
+    Left,
+    Right
+}
+```
+
+当只有一个枚举量时,会被编译成常量
+
+使用:
+
+```ts
+// 添加const防止修改
+const enum Directions {
+    Up,
+    Down,
+    Left,
+    Right
+}
+
+let directions = [Directions.Up, Directions.Down, Directions.Left, Directions.Right]
+```
+

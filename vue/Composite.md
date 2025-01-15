@@ -188,3 +188,8 @@ const userLocation = inject('location', 'The Universe')
 ### 3. 执行时机
 
 在beforeCreate之前执行
+
+## 二. 剩下的都是后续补充
+
+前面的是没学明白,现在已经有一定应用认识
+

@@ -394,7 +394,7 @@ fs.closeSync(fd);
 
 ```javascript
 var number = fs.openSync("hello.txt","w");
-fs.writeSync(number,"hahah");
+fs.writeSync(number,"h444444444444444444ahah");
 fs.closeSync(number);
 ```
 
